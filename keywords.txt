@@ -1,0 +1,55 @@
+#######################################
+# Syntax Coloring Map For Matrix
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+EtherShield KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+ES_enc28j60Init			KEYWORD2
+ES_enc28j60clkout		KEYWORD2
+ES_enc28j60linkup		KEYWORD2
+ES_enc28j60PhyWrite		KEYWORD2
+ES_enc28j60PacketReceive	KEYWORD2
+ES_enc28j60PacketSend		KEYWORD2
+ES_init_ip_arp_udp_tcp		KEYWORD2
+ES_eth_type_is_arp_and_my_ip	KEYWORD2
+ES_make_echo_reply_from_request	KEYWORD2
+ES_make_tcp_synack_from_syn	KEYWORD2
+ES_init_len_info		KEYWORD2
+ES_get_tcp_data_pointer		KEYWORD2
+ES_fill_buf_p			KEYWORD2
+ES_checksum			KEYWORD2
+ES_fill_ip_hdr_checksum		KEYWORD2
+ES_packetloop_icmp_tcp		KEYWORD2
+ES_fill_tcp_data_p		KEYWORD2
+ES_fill_tcp_data		KEYWORD2
+ES_www_server_reply		KEYWORD2
+ES_client_store_gw_mac		KEYWORD2
+ES_client_set_gwip		KEYWORD2
+ES_client_set_wwwip		KEYWORD2
+ES_client_arp_whohas		KEYWORD2
+ES_client_browse_url		KEYWORD2
+ES_client_http_post		KEYWORD2
+ES_client_ntp_request		KEYWORD2
+ES_client_ntp_process_answer	KEYWORD2
+ES_register_ping_rec_callback	KEYWORD2
+ES_client_icmp_request		KEYWORD2
+ES_packetloop_icmp_checkreply	KEYWORD2
+ES_send_wol			KEYWORD2
+ES_find_key_val			KEYWORD2
+ES_urldecode			KEYWORD2
+ES_urlencode			KEYWORD2
+ES_parse_ip			KEYWORD2
+ES_mk_net_str			KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+
