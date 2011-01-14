@@ -1,0 +1,10 @@
+Nuelectronics ENC28J60 EtherShield Library for Arduino.
+
+History:
+
+It is derived from code by Guido Socher and Pascal Stang, and hence licensed as GPL2. See http://www.gnu.org/licenses/gpl.html
+
+The Arduino EtherShield Library was initially created by Xing Yu of Nuelectronics.
+
+Library heavily modified and improved by Andrew D. Lindsay with extra code from the tuxgraphics.org ethernet library, which also originated from the Pascal Stang code.
+
