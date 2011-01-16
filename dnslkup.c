@@ -21,8 +21,7 @@
 static uint8_t dnstid_l=0; // a counter for transaction ID
 // src port high byte must be a a0 or higher:
 #define DNSCLIENT_SRC_PORT_H 0xe0 
-static uint8_t dnsip[]={8,8,8,8}; // the google public DNS, don't change unless there is a real need
-//static uint8_t dnsip[]={10,0,0,31}; // my router's DNS
+uint8_t dnsip[]={8,8,8,8}; // the google public DNS. To be used if DNS server is not set by user.
 static uint8_t haveDNSanswer=0;
 static uint8_t dns_answerip[4];
 static uint8_t dns_ansError=0;
@@ -187,6 +186,18 @@ uint8_t udp_client_check_for_dns_answer(uint8_t *buf,uint16_t plen){
         haveDNSanswer=1;
         return(1);
 }
+
+// set DNS server to be used for lookups.
+// defaults to Google DNS server if not called.
+void dnslkup_set_dnsip(uint8_t *dnsipaddr)
+{
+        uint8_t i=0;
+        while(i<4){
+                dnsip[i]=dnsipaddr[i];
+                i++;
+        }
+}
+
 #endif
 
 /* end of dnslkup.c */

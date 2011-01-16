@@ -26,6 +26,13 @@ static uint8_t websrvip[4] = {
 // web server (=web server is on the same lan as this host) 
 static uint8_t gwip[4] = {
   192,168,1,1};
+  
+// DNS server IP.
+// If ommited, or no call is made to ES_dnslkup_set_dnsip(dnsip), library will
+// default to Google DNS server at 8.8.8.8
+static uint8_t dnsip[4] = {
+  192,168,1,1};    
+
 //
 // global string buffer for hostname message:
 static char hoststr[150];
@@ -138,6 +145,7 @@ void setup(){
 
   // init the web client:
   es.ES_client_set_gwip(gwip);  // e.g internal IP of dsl router
+  es.ES_dnslkup_set_dnsip(dnsip); // generally same IP as router
 
 }
 

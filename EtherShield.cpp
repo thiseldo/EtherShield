@@ -286,6 +286,10 @@ uint8_t * EtherShield::ES_dnslkup_getip(void)
         return(dnslkup_getip() );
 }
 
+void EtherShield::ES_dnslkup_set_dnsip(uint8_t *dnsipaddr) {
+	dnslkup_set_dnsip(dnsipaddr);
+}
+
 //void EtherShield::ES_dnslkup_request(uint8_t *buf,const prog_char *progmem_hostname) {
 	//return( dnslkup_request(buf, progmem_hostname) );
 //}

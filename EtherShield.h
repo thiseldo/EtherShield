@@ -89,6 +89,7 @@ class EtherShield
 	uint8_t ES_dnslkup_haveanswer(void);
 	uint8_t ES_dnslkup_get_error_info(void);
 	uint8_t * ES_dnslkup_getip(void);
+	void ES_dnslkup_set_dnsip(uint8_t *dnsipaddr);
 	void ES_dnslkup_request(uint8_t *buf, uint8_t *hoststr );
 //	void ES_dnslkup_request(uint8_t *buf, const prog_char *hoststr );
 	uint8_t ES_udp_client_check_for_dns_answer(uint8_t *buf,uint16_t plen);

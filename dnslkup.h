@@ -32,6 +32,9 @@ uint8_t udp_client_check_for_dns_answer(uint8_t *buf,uint16_t plen);
 // returns the host IP of the name that we looked up if dnslkup_haveanswer did return 1
 extern uint8_t *dnslkup_getip(void);
 
+// set DNS server to be used for lookups.
+extern void dnslkup_set_dnsip(uint8_t *dnsipaddr);
+
 #endif /* UDP_client */
 #endif /* DNSLKUP_H */
 //@}
