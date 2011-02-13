@@ -17,13 +17,13 @@
  *
  * Chip type           : ATMEGA88/168/328 with ENC28J60
  *********************************************/
+#include "ip_config.h"
 #include <avr/io.h>
 #include <avr/pgmspace.h>
 #include <string.h>
 #include <stdlib.h>
 #include "net.h"
 #include "enc28j60.h"
-#include "ip_config.h"
 
 // Web server port, used when implementing webserver
 static uint8_t wwwport_l=80; // server port
@@ -56,12 +56,19 @@ static uint16_t (*client_tcp_datafill_callback)(uint8_t);
 static uint8_t www_fd=0;
 static uint8_t browsertype=0; // 0 = get, 1 = post
 static void (*client_browser_callback)(uint8_t,uint16_t,uint16_t);
+#ifdef FLASH_VARS
 static prog_char *client_additionalheaderline;
-static char *client_postval;
 static prog_char *client_method;  // for POST or PUT, no trailing space needed
 static prog_char *client_urlbuf;
-static char *client_urlbuf_var;
 static prog_char *client_hoststr;
+#else
+static char *client_additionalheaderline;
+static char *client_method;  // for POST or PUT, no trailing space needed
+static char *client_urlbuf;
+static char *client_hoststr;
+#endif
+static char *client_postval;
+static char *client_urlbuf_var;
 static uint8_t *bufptr=0; // ugly workaround for backward compatibility
 #endif
 static void (*icmp_callback)(uint8_t *ip);
@@ -1315,7 +1322,11 @@ uint16_t www_client_internal_datafill_callback(uint8_t fd){
                 if (browsertype==0){
                         // GET
                         len=fill_tcp_data_p(bufptr,0,PSTR("GET "));
+#ifdef FLASH_VARS
                         len=fill_tcp_data_p(bufptr,len,client_urlbuf);
+#else
+                        len=fill_tcp_data(bufptr,len,client_urlbuf);
+#endif
                         if( client_urlbuf_var )
                                 len=fill_tcp_data(bufptr,len,client_urlbuf_var);
                         // I would prefer http/1.0 but there is a funny
@@ -1323,10 +1334,15 @@ uint16_t www_client_internal_datafill_callback(uint8_t fd){
                         // them to send two packets (fragmented PDU)
                         // if we don't use HTTP/1.1 + Connection: close
                         len=fill_tcp_data_p(bufptr,len,PSTR(" HTTP/1.1\r\nHost: "));
+#ifdef FLASH_VARS
                         len=fill_tcp_data_p(bufptr,len,client_hoststr);
+#else
+                        len=fill_tcp_data(bufptr,len,client_hoststr);
+#endif
                         len=fill_tcp_data_p(bufptr,len,PSTR("\r\nUser-Agent: EtherShield/1.6\r\nAccept: text/html\r\nConnection: close\r\n\r\n"));
                 }else{
                         // POST
+#ifdef FLASH_VARS
                         if( client_method ) {
                                len=fill_tcp_data_p(bufptr,0, client_method );
                                len=fill_tcp_data_p(bufptr,len, PSTR( " " ) );
@@ -1340,6 +1356,21 @@ uint16_t www_client_internal_datafill_callback(uint8_t fd){
                                 len=fill_tcp_data_p(bufptr,len,PSTR("\r\n"));
                                 len=fill_tcp_data_p(bufptr,len,client_additionalheaderline);
                         }
+#else
+                        if( client_method ) {
+                               len=fill_tcp_data(bufptr,0, client_method );
+                               len=fill_tcp_data_p(bufptr,len, PSTR( " " ) );
+                        } else {
+                               len=fill_tcp_data_p(bufptr,0,PSTR("POST "));
+                        }
+                        len=fill_tcp_data(bufptr,len,client_urlbuf);
+                        len=fill_tcp_data_p(bufptr,len,PSTR(" HTTP/1.1\r\nHost: "));
+                        len=fill_tcp_data(bufptr,len,client_hoststr);
+                        if (client_additionalheaderline){
+                                len=fill_tcp_data_p(bufptr,len,PSTR("\r\n"));
+                                len=fill_tcp_data(bufptr,len,client_additionalheaderline);
+                        }
+#endif
                         len=fill_tcp_data_p(bufptr,len,PSTR("\r\nUser-Agent: EtherShield/1.6\r\nAccept: */*\r\nConnection: close\r\n"));
                         len=fill_tcp_data_p(bufptr,len,PSTR("Content-Length: "));
                         itoa(strlen(client_postval),strbuf,10);
@@ -1386,7 +1417,11 @@ uint8_t www_client_internal_result_callback(uint8_t fd, uint8_t statuscode, uint
 // statuscode is zero if the answer from the web server is 200 OK (e.g HTTP/1.1 200 OK)
 //
 //
+#ifdef FLASH_VARS
 void client_browse_url(prog_char *urlbuf, char *urlbuf_varpart, prog_char *hoststr, void (*callback)(uint8_t,uint16_t))
+#else
+void client_browse_url(char *urlbuf, char *urlbuf_varpart, char *hoststr, void (*callback)(uint8_t,uint16_t))
+#endif
 {
         client_urlbuf=urlbuf;
         client_urlbuf_var=urlbuf_varpart;
@@ -1402,7 +1437,11 @@ void client_browse_url(prog_char *urlbuf, char *urlbuf_varpart, prog_char *hosts
 // postval is a string buffer which can only be de-allocated by the caller 
 // when the post operation was really done (e.g when callback was executed).
 // postval must be urlencoded.
+#ifdef FLASH_VARS
 void client_http_post(prog_char *urlbuf, prog_char *hoststr, prog_char *additionalheaderline, prog_char *method, char *postval,void (*callback)(uint8_t,uint16_t))
+#else
+void client_http_post(char *urlbuf, char *hoststr, char *additionalheaderline, prog_char *method, char *postval,void (*callback)(uint8_t,uint16_t))
+#endif
 {
         client_urlbuf=urlbuf;
         client_hoststr=hoststr;

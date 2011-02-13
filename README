@@ -10,3 +10,31 @@ Library heavily modified and improved by Andrew D. Lindsay with extra code from 
 
 Minor modifications by Jonathan McCrohan.
 
+13/02/2011
+
+To provide flexibility, there is the option to have URLs etc in either
+Flash or program memory. In flash they cant be changed, in program memory
+they can be defined at runtime but take up program memory space.
+Define FLASH_VARS to use flash memory, undef it for the more flexible option
+
+This applies only to the ES_client_browse_url and ES_client_http_post functions.
+With FLASH_VARS the definitions are:
+
+ void ES_client_browse_url(prog_char *urlbuf, char *urlbuf_varpart,
+ prog_char *hoststr, void (*callback)(uint8_t,uint16_t));
+
+ void ES_client_http_post(prog_char *urlbuf, prog_char *hoststr,
+     prog_char *additionalheaderline, prog_char *method, char *postval,
+     void (*callback)(uint8_t,uint16_t));
+
+Without FLASH_VARS the definitions are:
+
+ void ES_client_browse_url(char *urlbuf, char *urlbuf_varpart,
+     char *hoststr, void (*callback)(uint8_t,uint16_t));
+
+ void ES_client_http_post(char *urlbuf, char *hoststr,
+     char *additionalheaderline, char *method, char *postval,
+     void (*callback)(uint8_t,uint16_t));
+
+
+

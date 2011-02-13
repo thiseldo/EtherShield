@@ -1,6 +1,7 @@
 // a wrapper class for EtherShield
 
 extern "C" {
+	#include "ip_config.h"
 	#include "enc28j60.h"
 	#include "ip_arp_udp_tcp.h"
 	#include "websrv_help_functions.h"
@@ -158,7 +159,6 @@ void EtherShield::ES_www_server_reply(uint8_t *buf,uint16_t dlen) {
 }
 	
 #if defined (TCP_client) || defined (WWW_client) || defined (NTP_client)
-//uint8_t EtherShield::ES_client_store_gw_mac(uint8_t *buf, uint8_t *gwipaddr) {
 uint8_t EtherShield::ES_client_store_gw_mac(uint8_t *buf) {
 	return client_store_gw_mac(buf);
 }
@@ -193,21 +193,37 @@ uint16_t EtherShield::ES_tcp_get_dlength( uint8_t *buf ){
 	return tcp_get_dlength(buf);
 }
 
-
-#endif
+#endif		// TCP_client WWW_Client etc
 
 #ifdef WWW_client
-	// ----- http get
+
+// ----- http get
+
+#ifdef FLASH_VARS
 void EtherShield::ES_client_browse_url(prog_char *urlbuf, char *urlbuf_varpart, prog_char *hoststr,
 		void (*callback)(uint8_t,uint16_t)) {
 	client_browse_url(urlbuf, urlbuf_varpart, hoststr, callback);
 }
+#else
+void EtherShield::ES_client_browse_url(char *urlbuf, char *urlbuf_varpart, char *hoststr,
+		void (*callback)(uint8_t,uint16_t)) {
+	client_browse_url(urlbuf, urlbuf_varpart, hoststr, callback);
+}
+#endif		// FLASH_VARS
 
+#ifdef FLASH_VARS
 void EtherShield::ES_client_http_post(prog_char *urlbuf, prog_char *hoststr, prog_char *additionalheaderline,
 		prog_char *method, char *postval,void (*callback)(uint8_t,uint16_t)) {
 	client_http_post(urlbuf, hoststr, additionalheaderline, method, postval,callback);
 }
-#endif
+#else
+void EtherShield::ES_client_http_post(char *urlbuf, char *hoststr, char *additionalheaderline,
+		char *method, char *postval,void (*callback)(uint8_t,uint16_t)) {
+	client_http_post(urlbuf, hoststr, additionalheaderline, method, postval,callback);
+}
+#endif		// FLASH_VARS
+
+#endif		// WWW_client
 
 #ifdef NTP_client
 void EtherShield::ES_client_ntp_request(uint8_t *buf,uint8_t *ntpip,uint8_t srcport) {
@@ -217,7 +233,7 @@ void EtherShield::ES_client_ntp_request(uint8_t *buf,uint8_t *ntpip,uint8_t srcp
 uint8_t EtherShield::ES_client_ntp_process_answer(uint8_t *buf,uint32_t *time,uint8_t dstport_l) {
 	return client_ntp_process_answer(buf,time,dstport_l);
 }
-#endif
+#endif		// NTP_client
 
 void EtherShield::ES_register_ping_rec_callback(void (*callback)(uint8_t *srcip)) {
 	register_ping_rec_callback(callback);
@@ -270,7 +286,6 @@ uint8_t EtherShield::ES_client_waiting_gw() {
 }
 
 #ifdef DNS_client
-
 uint8_t EtherShield::ES_dnslkup_haveanswer(void)
 {       
         return( dnslkup_haveanswer() );
@@ -290,9 +305,6 @@ void EtherShield::ES_dnslkup_set_dnsip(uint8_t *dnsipaddr) {
 	dnslkup_set_dnsip(dnsipaddr);
 }
 
-//void EtherShield::ES_dnslkup_request(uint8_t *buf,const prog_char *progmem_hostname) {
-	//return( dnslkup_request(buf, progmem_hostname) );
-//}
 void EtherShield::ES_dnslkup_request(uint8_t *buf,uint8_t *hostname) {
 	return( dnslkup_request(buf, hostname) );
 }
@@ -301,4 +313,5 @@ uint8_t EtherShield::ES_udp_client_check_for_dns_answer(uint8_t *buf,uint16_t pl
 	return( udp_client_check_for_dns_answer( buf, plen) );
 }
 
-#endif
+#endif		// DNS_client
+

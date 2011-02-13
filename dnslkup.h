@@ -11,7 +11,6 @@
 //@{
 #ifndef DNSLKUP_H
 #define DNSLKUP_H 1
-#include "ip_config.h"
 
 // to use this you need to enable UDP_client in the file ip_config.h
 //

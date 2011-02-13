@@ -12,11 +12,38 @@
 #ifndef IP_CONFIG_H
 #define IP_CONFIG_H
 
+// To provide flexibility, there is the option to have URLs etc in either
+// Flash or program memory. In flash they cant be changed, in program memory
+// they can be defined at runtime but take up program memory space.
+// Define FLASH_VARS to use flash memory, undef it for the more flexible option
+//
+// This applies only to the ES_client_browse_url and ES_client_http_post functions.
+// With FLASH_VARS the definitions are:
+//
+//  void ES_client_browse_url(prog_char *urlbuf, char *urlbuf_varpart,
+//  prog_char *hoststr, void (*callback)(uint8_t,uint16_t));
+//
+//  void ES_client_http_post(prog_char *urlbuf, prog_char *hoststr,
+//      prog_char *additionalheaderline, prog_char *method, char *postval,
+//      void (*callback)(uint8_t,uint16_t));
+//
+// Without FLASH_VARS the definitions are:
+//
+//  void ES_client_browse_url(char *urlbuf, char *urlbuf_varpart,
+//      char *hoststr, void (*callback)(uint8_t,uint16_t));
+//
+//  void ES_client_http_post(char *urlbuf, char *hoststr,
+//      char *additionalheaderline, char *method, char *postval,
+//      void (*callback)(uint8_t,uint16_t));
+// 
+#define FLASH_VARS 1
+//#undef FLASH_VARS
+
 //------------- functions in ip_arp_udp_tcp.c --------------
 // an NTP client (ntp clock):
-#define NTP_client
+#define NTP_client 1
 // a spontaneous sending UDP client
-#define UDP_client
+#define UDP_client 1
 
 // to send out a ping:
 #undef PING_client
@@ -28,21 +55,21 @@
 // a "web browser". This can be use to upload data
 // to a web server on the internet by encoding the data 
 // into the url (like a Form action of type GET):
-#define WWW_client
-#define TCP_client
+#define WWW_client 1
+#define TCP_client 1
 // if you do not need a browser and just a server:
 //#undef WWW_client
 //
 //------------- functions in websrv_help_functions.c --------------
 //
 // functions to decode cgi-form data:
-#define FROMDECODE_websrv_help
+#define FROMDECODE_websrv_help 1
 
 // function to encode a URL (mostly needed for a web client)
-#define URLENCODE_websrv_help
+#define URLENCODE_websrv_help 1
 
 // DNS lookup support
-#define DNS_client
+#define DNS_client 1
 
 #endif /* IP_CONFIG_H */
 //@}

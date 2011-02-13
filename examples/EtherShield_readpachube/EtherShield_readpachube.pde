@@ -58,7 +58,11 @@ void browserresult_callback(uint8_t statuscode,uint16_t datapos){
 
 void setup(){
   Serial.begin(9600);
-  Serial.println("Ethershield Pachube Read example");
+#ifdef FLASH_VARS
+  Serial.println("Ethershield Pachube Read example, using Flash");
+#else
+  Serial.println("Ethershield Pachube Read example using ram");
+#endif
 
   /*initialize enc28j60*/
   es.ES_enc28j60Init(mymac);
@@ -127,9 +131,13 @@ void loop()
     if( dns_state == 2 && millis() - timetosend > 10000)  // every 10 seconds
     {
       timetosend = millis();
+#ifdef FLASH_VARS
       // note the use of PSTR - this puts the string into code space and is compulsory in this call
       // second parameter is a variable string to append to HTTPPATH, this string is NOT a PSTR
       es.ES_client_browse_url(PSTR(HTTPPATH), NULL, PSTR(HOSTNAME), &browserresult_callback);
+#else
+      es.ES_client_browse_url(HTTPPATH, NULL, HOSTNAME, &browserresult_callback);
+#endif
     }
   }
 }

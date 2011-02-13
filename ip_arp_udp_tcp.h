@@ -14,7 +14,6 @@
 //@{
 #ifndef IP_ARP_UDP_TCP_H
 #define IP_ARP_UDP_TCP_H
-#include "ip_config.h"
 #include <avr/pgmspace.h>
 
 // -- web server functions --
@@ -58,10 +57,7 @@ extern void www_server_reply(uint8_t *buf,uint16_t dlen);
 
 // -- client functions --
 #if defined (WWW_client) || defined (NTP_client)  || defined (UDP_client) || defined (TCP_client) || defined (PING_client)
-extern uint8_t client_store_gw_mac(uint8_t *buf);       //, uint8_t *gwipaddr);
-//extern void client_set_gwip(uint8_t *gwipaddr);
-//extern void client_set_wwwip(uint8_t *wwwipaddr);
-//extern void client_arp_whohas(uint8_t *buf,uint8_t *ip_we_search) ;
+extern uint8_t client_store_gw_mac(uint8_t *buf);
 
 extern void client_set_gwip(uint8_t *gwipaddr);
 // do a continues refresh until found:
@@ -72,7 +68,7 @@ extern uint8_t client_waiting_gw(void); // 1 no GW mac yet, 0 have a gw mac
 
 extern uint16_t build_tcp_data(uint8_t *buf, uint16_t srcPort );
 extern void send_tcp_data(uint8_t *buf,uint16_t dlen );
-#endif
+#endif          // WWW_client TCP_client etc
 
 
 #if defined (WWW_client) || defined (TCP_client) 
@@ -130,12 +126,20 @@ extern void tcp_client_send_packet(uint8_t *buf,uint16_t dest_port, uint16_t src
 	uint8_t clear_seqck, uint16_t next_ack_num, uint16_t dlength, uint8_t *dest_mac, uint8_t *dest_ip);
 extern uint16_t tcp_get_dlength ( uint8_t *buf );
 
-#endif
+#endif          // TCP_client
 
 #define HTTP_HEADER_START ((uint16_t)TCP_SRC_PORT_H_P+(buf[TCP_HEADER_LEN_P]>>4)*4)
+
 #ifdef WWW_client
+
+#ifdef FLASH_VARS
 // ----- http get
 extern void client_browse_url(prog_char *urlbuf, char *urlbuf_varpart, prog_char *hoststr, void (*callback)(uint8_t,uint16_t));
+#else
+// ----- http get
+extern void client_browse_url(char *urlbuf, char *urlbuf_varpart, char *hoststr, void (*callback)(uint8_t,uint16_t));
+#endif          // FLASH_VARS
+
 // The callback is a reference to a function which must look like this:
 // void browserresult_callback(uint8_t statuscode,uint16_t datapos)
 // statuscode=0 means a good webpage was received, with http code 200 OK
@@ -147,13 +151,19 @@ extern void client_browse_url(prog_char *urlbuf, char *urlbuf_varpart, prog_char
 // postval is a string buffer which can only be de-allocated by the caller 
 // when the post operation was really done (e.g when callback was executed).
 // postval must be urlencoded.
+
+#ifdef FLASH_VARS
 extern void client_http_post(prog_char *urlbuf, prog_char *hoststr, prog_char *additionalheaderline, prog_char *method, char *postval,void (*callback)(uint8_t,uint16_t));
+#else
+extern void client_http_post(char *urlbuf, char *hoststr, char *additionalheaderline, char *method, char *postval,void (*callback)(uint8_t,uint16_t));
+#endif          // FLASH_VARS
+
 // The callback is a reference to a function which must look like this:
 // void browserresult_callback(uint8_t statuscode,uint16_t datapos)
 // statuscode=0 means a good webpage was received, with http code 200 OK
 // statuscode=1 an http error was received
 // statuscode=2 means the other side in not a web server and in this case datapos is also zero
-#endif
+#endif          // WWW_client
 
 #ifdef NTP_client
 extern void client_ntp_request(uint8_t *buf,uint8_t *ntpip,uint8_t srcport);
@@ -174,7 +184,7 @@ extern void send_udp_transmit(uint8_t *buf,uint8_t datalen);
 
 // send_udp sends via gwip, you must call client_set_gwip at startup, datalen must be less than 220 bytes
 extern void send_udp(uint8_t *buf,char *data,uint8_t datalen,uint16_t sport, uint8_t *dip, uint16_t dport);
-#endif
+#endif          // UDP_client
 
 
 // you can find out who ping-ed you if you want:

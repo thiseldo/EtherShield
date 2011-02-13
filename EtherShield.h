@@ -21,8 +21,8 @@
 #define ETHERSHIELD_H
 
 #include <inttypes.h>
-#include "enc28j60.h"
 #include "ip_config.h"
+#include "enc28j60.h"
 #include "ip_arp_udp_tcp.h"
 #include "net.h"
 
@@ -91,15 +91,19 @@ class EtherShield
 	uint8_t * ES_dnslkup_getip(void);
 	void ES_dnslkup_set_dnsip(uint8_t *dnsipaddr);
 	void ES_dnslkup_request(uint8_t *buf, uint8_t *hoststr );
-//	void ES_dnslkup_request(uint8_t *buf, const prog_char *hoststr );
 	uint8_t ES_udp_client_check_for_dns_answer(uint8_t *buf,uint16_t plen);
 #endif
 
 #define HTTP_HEADER_START ((uint16_t)TCP_SRC_PORT_H_P+(buf[TCP_HEADER_LEN_P]>>4)*4)
 #ifdef WWW_client
 	// ----- http get
+#ifdef FLASH_VARS
 	void ES_client_browse_url(prog_char *urlbuf, char *urlbuf_varpart, prog_char *hoststr,
 			void (*callback)(uint8_t,uint16_t));
+#else
+	void ES_client_browse_url(char *urlbuf, char *urlbuf_varpart, char *hoststr,
+			void (*callback)(uint8_t,uint16_t));
+#endif
 	// The callback is a reference to a function which must look like this:
 	// void browserresult_callback(uint8_t statuscode,uint16_t datapos)
 	// statuscode=0 means a good webpage was received, with http code 200 OK
@@ -112,19 +116,24 @@ class EtherShield
 	// postval is a string buffer which can only be de-allocated by the caller 
 	// when the post operation was really done (e.g when callback was executed).
 	// postval must be urlencoded.
+#ifdef FLASH_VARS
 	void ES_client_http_post(prog_char *urlbuf, prog_char *hoststr, prog_char *additionalheaderline,
 			prog_char *method, char *postval,void (*callback)(uint8_t,uint16_t));
+#else
+	void ES_client_http_post(char *urlbuf, char *hoststr, char *additionalheaderline,
+			char *method, char *postval,void (*callback)(uint8_t,uint16_t));
+#endif
 	// The callback is a reference to a function which must look like this:
 	// void browserresult_callback(uint8_t statuscode,uint16_t datapos)
 	// statuscode=0 means a good webpage was received, with http code 200 OK
 	// statuscode=1 an http error was received
 	// statuscode=2 means the other side in not a web server and in this case datapos is also zero
-#endif
+#endif		// WWW_client
 
 #ifdef NTP_client
 	void ES_client_ntp_request(uint8_t *buf,uint8_t *ntpip,uint8_t srcport);
 	uint8_t ES_client_ntp_process_answer(uint8_t *buf,uint32_t *time,uint8_t dstport_l);
-#endif
+#endif		// NTP_client
 
 	// you can find out who ping-ed you if you want:
 	void ES_register_ping_rec_callback(void (*callback)(uint8_t *srcip));

@@ -13,9 +13,9 @@
 #include <avr/pgmspace.h>
 #include <string.h>
 #include <stdlib.h>
+#include "ip_config.h"
 #include "net.h"
 #include "ip_arp_udp_tcp.h"
-#include "ip_config.h"
 
 #if defined (UDP_client) 
 static uint8_t dnstid_l=0; // a counter for transaction ID
