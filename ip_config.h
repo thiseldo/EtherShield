@@ -50,7 +50,7 @@
 #define PINGPATTERN 0x42
 
 // a UDP wake on lan sender:
-#undef WOL_client
+#define WOL_client
 
 // a "web browser". This can be use to upload data
 // to a web server on the internet by encoding the data 

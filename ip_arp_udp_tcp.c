@@ -951,8 +951,8 @@ void send_wol(uint8_t *buf,uint8_t *wolmac)
         buf[ETH_TYPE_H_P] = ETHTYPE_IP_H_V;
         buf[ETH_TYPE_L_P] = ETHTYPE_IP_L_V;
         fill_buf_p(&buf[IP_P],9,iphdr);
-        buf[IP_TOTLEN_L_P]=0x54;
-        buf[IP_PROTO_P]=IP_PROTO_ICMP_V;
+        buf[IP_TOTLEN_L_P]=0x82;
+        buf[IP_PROTO_P]=IP_PROTO_UDP_V;
         i=0;
         while(i<4){
                 buf[IP_SRC_P+i]=ipaddr[i];
@@ -986,12 +986,11 @@ void send_wol(uint8_t *buf,uint8_t *wolmac)
                 }
                 m++;
         }
-        //
-        ck=checksum(&buf[IP_SRC_P], 16+ 102,1);
+        ck=checksum(&buf[IP_SRC_P], 118,1);
         buf[UDP_CHECKSUM_H_P]=ck>>8;
         buf[UDP_CHECKSUM_L_P]=ck& 0xff;
 
-        enc28j60PacketSend(pos,buf);
+        enc28j60PacketSend(UDP_HEADER_LEN+IP_HEADER_LEN+ETH_HEADER_LEN+102,buf);
 }
 #endif // WOL_client
 
