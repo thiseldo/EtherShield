@@ -8,6 +8,12 @@ The Arduino EtherShield Library was initially created by Xing Yu of Nuelectronic
 
 Library heavily modified and improved by Andrew D. Lindsay with extra code from the tuxgraphics.org ethernet library, which also originated from the Pascal Stang code.
 
+18/02/2011
+
+Fixed Wake On Lan code and added example.
+
+Older changes:
+
 Minor modifications by Jonathan McCrohan.
 
 13/02/2011
