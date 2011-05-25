@@ -8,6 +8,24 @@ The Arduino EtherShield Library was initially created by Xing Yu of Nuelectronic
 
 Library heavily modified and improved by Andrew D. Lindsay with extra code from the tuxgraphics.org ethernet library, which also originated from the Pascal Stang code.
 
+25/05/2011
+
+Added DHCP module.
+
+Added separate SPI initialisation
+
+To use this library with existing code, please add the following to intialise
+the SPI interface as it is no longer part if the ES_enc28j60Init function.
+This is so that multiple SPI devices can be used without having to reinitialise
+the port pins.
+
+  // Initialise SPI interface
+  es.ES_enc28j60SpiInit();
+
+Updates to various functions in ip_arp_udp_tcp where plen was 8bits, changed to 16bits so larger
+packets can be user.
+
+
 18/02/2011
 
 Fixed Wake On Lan code and added example.

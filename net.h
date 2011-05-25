@@ -181,6 +181,23 @@
 #define TCP_CHECKSUM_L_P 0x33
 #define TCP_OPTIONS_P 0x36
 //
+//
+
+// DNS States for access in applications
+#define DNS_STATE_INIT 0
+#define DNS_STATE_REQUESTED 1
+#define DNS_STATE_ANSWER 2
+
+// DHCP States for access in applications
+#define DHCP_STATE_INIT 0
+#define DHCP_STATE_DISCOVER 1
+#define DHCP_STATE_OFFER 2
+#define DHCP_STATE_REQUEST 3
+#define DHCP_STATE_ACK 4
+#define DHCP_STATE_OK 5
+#define DHCP_STATE_RENEW 6
+
+
 #endif
 //@}
 

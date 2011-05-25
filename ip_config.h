@@ -12,6 +12,13 @@
 #ifndef IP_CONFIG_H
 #define IP_CONFIG_H
 
+// IF using other SPI devices, for example RF12B modules then define this
+// This alters the way the SS/CS pin is accessed. If set then it can be changed
+// If not set then it is fixed at 10 and uses direct I/O
+// Also for RF12 use the speed is reduced
+//#define USE_RF12
+#undef USE_RF12
+
 // To provide flexibility, there is the option to have URLs etc in either
 // Flash or program memory. In flash they cant be changed, in program memory
 // they can be defined at runtime but take up program memory space.
@@ -70,6 +77,9 @@
 
 // DNS lookup support
 #define DNS_client 1
+
+// DHCP support
+#define DHCP_client 1
 
 #endif /* IP_CONFIG_H */
 //@}

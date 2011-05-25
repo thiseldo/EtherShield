@@ -1,5 +1,5 @@
 /*
- * Read a pachube data streem and report results as csv
+ * Read a pachube data stream and report results as csv
  */
 #include <EtherShield.h>
 
@@ -64,7 +64,10 @@ void setup(){
   Serial.println("Ethershield Pachube Read example using ram");
 #endif
 
-  /*initialize enc28j60*/
+  // Initialise SPI interface
+  es.ES_enc28j60SpiInit();
+
+  // initialize ENC28J60
   es.ES_enc28j60Init(mymac);
 
   //init the ethernet/ip layer:

@@ -25,19 +25,27 @@ static uint8_t Enc28j60Bank;
 static uint16_t gNextPacketPtr;
 
 // Where we set the CS pin number
-byte enc28j60ControlCs = DEFAULT_ENC28J60_CONTROL_CS;
+static uint8_t enc28j60ControlCs = DEFAULT_ENC28J60_CONTROL_CS;
 
 #define waitspi() while(!(SPSR&(1<<SPIF)))
 
 // Enable ENC28J60 after disabling interupts
 static void enableChip() {
     cli();
+#ifdef USE_RF12
     digitalWrite(enc28j60ControlCs, LOW);
+#else
+    PORTB &= ~(1<<2);
+#endif
 }
 
 // Disable ENC28J60 then enable interupts
 static void disableChip() {
+#ifdef USE_RF12
     digitalWrite(enc28j60ControlCs, HIGH);
+#else
+    PORTB |= (1<<2);
+#endif
     sei();
 }
 
@@ -183,6 +191,26 @@ void enc28j60clkout(uint8_t clk)
 	enc28j60Write(ECOCON, clk & 0x7);
 }
 
+void enc28j60SpiInit() {
+	pinMode(SPI_SS, OUTPUT);
+       	digitalWrite(SPI_SS, HIGH);
+	pinMode(SPI_MOSI, OUTPUT);
+	pinMode(SPI_SCK, OUTPUT);
+	pinMode(SPI_MISO, INPUT);
+
+       	digitalWrite(SPI_MOSI, HIGH);
+       	digitalWrite(SPI_MOSI, LOW);
+	digitalWrite(SPI_SCK, LOW);
+	
+#ifdef USE_RF12
+        // use clk/8 (2x 1/16th) to avoid exceeding RF12's SPI specs of 2.5 MHz when both are used together
+        SPCR = _BV(SPE) | _BV(MSTR);
+#else
+        SPCR = _BV(SPE) | _BV(MSTR) | _BV(SPR0);
+#endif
+        SPSR |= _BV(SPI2X);
+}
+
 // Single parameter init
 void enc28j60Init(uint8_t* macaddr)
 {
@@ -191,20 +219,12 @@ void enc28j60Init(uint8_t* macaddr)
 
 void enc28j60InitWithCs( uint8_t* macaddr, uint8_t csPin )
 {
-        enc28j60ControlCs = csPin;
 	// initialize I/O
+        enc28j60ControlCs = csPin; 
         // ss as output:
-	pinMode(enc28j60ControlCs, OUTPUT);
+	pinMode(csPin, OUTPUT);
 	disableChip(); // ss=0
-        // init rest of SPI pins
-	pinMode(SPI_MOSI, OUTPUT);
-	pinMode(SPI_SCK, OUTPUT);
-	pinMode(SPI_MISO, INPUT);
-	
-        // use clk/8 (2x 1/16th) to avoid exceeding RF12's SPI specs of 2.5 MHz
-        SPCR = _BV(SPE) | _BV(MSTR) | _BV(SPR0);
-        SPSR |= _BV(SPI2X);
-            
+
 	// perform system reset
 	enc28j60WriteOp(ENC28J60_SOFT_RESET, 0, ENC28J60_SOFT_RESET);
 	delay(50);
@@ -247,8 +267,6 @@ void enc28j60InitWithCs( uint8_t* macaddr, uint8_t csPin )
 	enc28j60Write(MACON2, 0x00);
 	// enable automatic padding to 60bytes and CRC operations
 	enc28j60WriteOp(ENC28J60_BIT_FIELD_SET, MACON3, MACON3_PADCFG0|MACON3_TXCRCEN|MACON3_FRMLNEN);  //|MACON3_FULDPX);
-//	enc28j60WriteOp(ENC28J60_BIT_FIELD_SET, MACON3, MACON3_PADCFG2|MACON3_PADCFG1|MACON3_PADCFG0|MACON3_TXCRCEN|MACON3_FRMLNEN);
-	//enc28j60WriteOp(ENC28J60_BIT_FIELD_SET, MACON3, MACON3_PADCFG0|MACON3_TXCRCEN|MACON3_FRMLNEN);
 	// set inter-frame gap (non-back-to-back)
 	enc28j60WriteWord(MAIPGL, 0x0C12);
 	// set inter-frame gap (back-to-back)
@@ -278,7 +296,14 @@ void enc28j60InitWithCs( uint8_t* macaddr, uint8_t csPin )
 // read the revision of the chip:
 uint8_t enc28j60getrev(void)
 {
-	return(enc28j60Read(EREVID));
+        uint8_t rev;
+        rev=enc28j60Read(EREVID);
+        // microchip forgot to step the number on the silcon when they
+        // released the revision B7. 6 is now rev B7. We still have
+        // to see what they do when they release B8. At the moment
+        // there is no B8 out yet
+        if (rev>5) rev++;
+	return(rev);
 }
 
 // link status

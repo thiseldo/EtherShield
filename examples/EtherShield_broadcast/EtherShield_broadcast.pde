@@ -53,7 +53,10 @@ void setup(){
   udpPayload.time = millis();
   udpPayload.temperature = 0;
 
-  /*initialize enc28j60*/
+  // Initialise SPI interface
+  es.ES_enc28j60SpiInit();
+
+  // initialize ENC28J60
   es.ES_enc28j60Init(mymac);
 
   //init the ethernet/ip layer:

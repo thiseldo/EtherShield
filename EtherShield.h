@@ -32,6 +32,7 @@ class EtherShield
   
     EtherShield();
 
+	void ES_enc28j60SpiInit( void );
 	void ES_enc28j60Init( uint8_t* macaddr);
 	void ES_enc28j60Init( uint8_t* macaddr, uint8_t csPin );
 	void ES_enc28j60clkout(uint8_t clk);
@@ -40,6 +41,7 @@ class EtherShield
 	uint16_t ES_enc28j60PacketReceive(uint16_t len, uint8_t* packet);
 	void ES_enc28j60PacketSend(uint16_t len, uint8_t* packet);
 	uint8_t ES_enc28j60Revision(void);
+	uint8_t ES_enc28j60Read( uint8_t address );
 
 	void ES_init_ip_arp_udp_tcp(uint8_t *mymac,uint8_t *myip,uint16_t port);
 	// for a UDP server:
@@ -92,6 +94,15 @@ class EtherShield
 	void ES_dnslkup_set_dnsip(uint8_t *dnsipaddr);
 	void ES_dnslkup_request(uint8_t *buf, uint8_t *hoststr );
 	uint8_t ES_udp_client_check_for_dns_answer(uint8_t *buf,uint16_t plen);
+#endif
+
+#ifdef DHCP_client
+	uint8_t ES_dhcp_state(void);
+	void ES_dhcp_start(uint8_t *buf, uint8_t *macaddrin, uint8_t *ipaddrin,
+			uint8_t *maskin, uint8_t *gwipin, uint8_t *dhcpsvrin,
+			uint8_t *dnssvrin );
+
+	uint8_t ES_check_for_dhcp_answer(uint8_t *buf,uint16_t plen);
 #endif
 
 #define HTTP_HEADER_START ((uint16_t)TCP_SRC_PORT_H_P+(buf[TCP_HEADER_LEN_P]>>4)*4)
@@ -149,7 +160,7 @@ class EtherShield
 #endif // WOL_client
 
 #ifdef FROMDECODE_websrv_help
-	uint8_t ES_find_key_val(char *str,char *strbuf, uint8_t maxlen,char *key);
+	uint8_t ES_find_key_val(char *str,char *strbuf, uint16_t maxlen,char *key);
 	void ES_urldecode(char *urlbuf);
 #endif	// FROMDECODE_websrv_help
 
@@ -158,7 +169,7 @@ class EtherShield
 #endif	// URLENCODE_websrv_help
 
 	uint8_t ES_parse_ip(uint8_t *bytestr,char *str);
-	void ES_mk_net_str(char *resultstr,uint8_t *bytestr,uint8_t len,char separator,uint8_t base);
+	void ES_mk_net_str(char *resultstr,uint8_t *bytestr,uint16_t len,char separator,uint8_t base);
 
 };
 

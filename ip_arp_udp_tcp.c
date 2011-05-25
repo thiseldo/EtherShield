@@ -84,7 +84,7 @@ static uint8_t gwmacaddr[6];
 static volatile uint8_t waitgwmac=WGW_INITIAL_ARP;
 #endif
 
-static uint8_t macaddr[6];
+uint8_t macaddr[6];
 static uint8_t ipaddr[4];
 static uint16_t info_data_len=0;
 static uint8_t seqnum=0xa; // my initial tcp sequence number
@@ -439,7 +439,7 @@ void make_echo_reply_from_request(uint8_t *buf,uint16_t len)
 }
 
 // you can send a max of 220 bytes of data
-void make_udp_reply_from_request(uint8_t *buf,char *data,uint8_t datalen,uint16_t port)
+void make_udp_reply_from_request(uint8_t *buf,char *data,uint16_t datalen,uint16_t port)
 {
         uint8_t i=0;
         uint16_t ck;
@@ -448,8 +448,8 @@ void make_udp_reply_from_request(uint8_t *buf,char *data,uint8_t datalen,uint16_
                 datalen=220;
         }
         // total length field in the IP header must be set:
-        buf[IP_TOTLEN_H_P]=0;
-        buf[IP_TOTLEN_L_P]=IP_HEADER_LEN+UDP_HEADER_LEN+datalen;
+        buf[IP_TOTLEN_H_P]=(IP_HEADER_LEN+UDP_HEADER_LEN+datalen) >>8;
+        buf[IP_TOTLEN_L_P]=(IP_HEADER_LEN+UDP_HEADER_LEN+datalen) & 0xff;
         make_ip(buf);
         // send to port:
         //buf[UDP_DST_PORT_H_P]=port>>8;
@@ -460,8 +460,8 @@ void make_udp_reply_from_request(uint8_t *buf,char *data,uint8_t datalen,uint16_
         buf[UDP_SRC_PORT_H_P]=port>>8;
         buf[UDP_SRC_PORT_L_P]=port & 0xff;
         // calculte the udp length:
-        buf[UDP_LEN_H_P]=0;
-        buf[UDP_LEN_L_P]=UDP_HEADER_LEN+datalen;
+        buf[UDP_LEN_H_P]=(UDP_HEADER_LEN+datalen) >> 8;
+        buf[UDP_LEN_L_P]=(UDP_HEADER_LEN+datalen) & 0xff;
         // zero the checksum
         buf[UDP_CHECKSUM_H_P]=0;
         buf[UDP_CHECKSUM_L_P]=0;
@@ -864,7 +864,6 @@ uint8_t client_ntp_process_answer(uint8_t *buf,uint32_t *time,uint8_t dstport_l)
 void send_udp_prepare(uint8_t *buf,uint16_t sport, uint8_t *dip, uint16_t dport)
 {
         uint8_t i=0;
-        //
         while(i<6){
                 buf[ETH_DST_MAC +i]=gwmacaddr[i]; // gw mac in local lan or host mac
                 buf[ETH_SRC_MAC +i]=macaddr[i];
@@ -897,12 +896,16 @@ void send_udp_prepare(uint8_t *buf,uint16_t sport, uint8_t *dip, uint16_t dport)
         // now starting with the first byte at buf[UDP_DATA_P]
 }
 
-void send_udp_transmit(uint8_t *buf,uint8_t datalen)
+void send_udp_transmit(uint8_t *buf,uint16_t datalen)
 {
         uint16_t ck;
-        buf[IP_TOTLEN_L_P]=IP_HEADER_LEN+UDP_HEADER_LEN+datalen;
+        buf[IP_TOTLEN_H_P]=(IP_HEADER_LEN+UDP_HEADER_LEN+datalen) >> 8;
+        buf[IP_TOTLEN_L_P]=(IP_HEADER_LEN+UDP_HEADER_LEN+datalen) & 0xff;
         fill_ip_hdr_checksum(buf);
-        buf[UDP_LEN_L_P]=UDP_HEADER_LEN+datalen;
+        //buf[UDP_LEN_L_P]=UDP_HEADER_LEN+datalen;
+        buf[UDP_LEN_H_P]=(UDP_HEADER_LEN+datalen) >>8;
+        buf[UDP_LEN_L_P]=(UDP_HEADER_LEN+datalen) & 0xff;
+
         //
         ck=checksum(&buf[IP_SRC_P], 16 + datalen,1);
         buf[UDP_CHECKSUM_H_P]=ck>>8;
@@ -910,11 +913,11 @@ void send_udp_transmit(uint8_t *buf,uint8_t datalen)
         enc28j60PacketSend(UDP_HEADER_LEN+IP_HEADER_LEN+ETH_HEADER_LEN+datalen,buf);
 }
 
-void send_udp(uint8_t *buf,char *data,uint8_t datalen,uint16_t sport, uint8_t *dip, uint16_t dport)
+void send_udp(uint8_t *buf,char *data,uint16_t datalen,uint16_t sport, uint8_t *dip, uint16_t dport)
 {
         send_udp_prepare(buf,sport, dip, dport);
         uint8_t i=0;
-        // limit the length:
+        // limit the length: Why??? ADL
         if (datalen>220){
                 datalen=220;
         }

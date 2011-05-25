@@ -25,7 +25,9 @@
 
 // Default CS pin is 10, for the unmodified shield.
 // Can be changed in init function to use another pin
+// But SPI_SS needs to be setup correctly too
 #define DEFAULT_ENC28J60_CONTROL_CS             10
+#define SPI_SS                                  10
 #define SPI_MOSI				11
 #define SPI_MISO				12
 #define SPI_SCK					13
@@ -278,6 +280,7 @@ extern uint8_t enc28j60Read(uint8_t address);
 extern void enc28j60Write(uint8_t address, uint8_t data);
 extern void enc28j60PhyWrite(uint8_t address, uint16_t data);
 extern void enc28j60clkout(uint8_t clk);
+extern void enc28j60SpiInit(void);
 extern void enc28j60Init(uint8_t* macaddr);
 extern void enc28j60InitWithCs( uint8_t* macaddr, uint8_t csPin );
 extern void enc28j60PacketSend(uint16_t len, uint8_t* packet);

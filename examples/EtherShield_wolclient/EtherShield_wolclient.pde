@@ -31,6 +31,9 @@ uint32_t lastUpdate = 0;
 
 void setup(){
 
+  // Initialise SPI interface
+  es.ES_enc28j60SpiInit();
+
   // initialize enc28j60
   es.ES_enc28j60Init(mymac);
 

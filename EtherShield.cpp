@@ -9,11 +9,18 @@ extern "C" {
 #ifdef DNS_client
 	#include "dnslkup.h"
 #endif
+#ifdef DHCP_client
+	#include "dhcp.h"
+#endif
 }
 #include "EtherShield.h"
 
 //constructor
 EtherShield::EtherShield(){
+}
+
+void EtherShield::ES_enc28j60SpiInit(){
+  enc28j60SpiInit();
 }
 
 void EtherShield::ES_enc28j60Init(uint8_t* macaddr){
@@ -27,29 +34,31 @@ void EtherShield::ES_enc28j60Init( uint8_t* macaddr, uint8_t csPin ) {
   enc28j60clkout(2); // change clkout from 6.25MHz to 12.5MHz
   delay(10);
 
+  for( int f=0; f<3; f++ ) {
   // 0x880 is PHLCON LEDB=on, LEDA=on
-  // enc28j60PhyWrite(PHLCON,0b0000 1000 1000 00 00);
-  enc28j60PhyWrite(PHLCON,0x880);
+  // enc28j60PhyWrite(PHLCON,0b0011 1000 1000 00 00);
+  enc28j60PhyWrite(PHLCON,0x3880);
   delay(500);
   //
   // 0x990 is PHLCON LEDB=off, LEDA=off
-  // enc28j60PhyWrite(PHLCON,0b0000 1001 1001 00 00);
-  enc28j60PhyWrite(PHLCON,0x990);
+  // enc28j60PhyWrite(PHLCON,0b0011 1001 1001 00 00);
+  enc28j60PhyWrite(PHLCON,0x3990);
   delay(500);
+  }
   //
   // 0x880 is PHLCON LEDB=on, LEDA=on
-  // enc28j60PhyWrite(PHLCON,0b0000 1000 1000 00 00);
-  enc28j60PhyWrite(PHLCON,0x880);
-  delay(500);
+  // enc28j60PhyWrite(PHLCON,0b0011 1000 1000 00 00);
+  //enc28j60PhyWrite(PHLCON,0x3880);
+  //delay(500);
   //
   // 0x990 is PHLCON LEDB=off, LEDA=off
-  // enc28j60PhyWrite(PHLCON,0b0000 1001 1001 00 00);
-  enc28j60PhyWrite(PHLCON,0x990);
-  delay(500);
+  // enc28j60PhyWrite(PHLCON,0b0011 1001 1001 00 00);
+  //enc28j60PhyWrite(PHLCON,0x3990);
+  //delay(500);
   //
   // 0x476 is PHLCON LEDA=links status, LEDB=receive/transmit
-  // enc28j60PhyWrite(PHLCON,0b0000 0100 0111 01 10);
-  enc28j60PhyWrite(PHLCON,0x476);
+  // enc28j60PhyWrite(PHLCON,0b0011 0100 0111 01 10);
+  enc28j60PhyWrite(PHLCON,0x3476);
   delay(100);
 }
 
@@ -59,6 +68,10 @@ void EtherShield::ES_enc28j60clkout(uint8_t clk){
 
 uint8_t EtherShield::ES_enc28j60linkup(void) {
 	return enc28j60linkup();
+}
+
+uint8_t EtherShield::ES_enc28j60Read( uint8_t address ) {
+	return enc28j60Read( address );
 }
 
 uint8_t EtherShield::ES_enc28j60Revision(void) {
@@ -257,7 +270,7 @@ void EtherShield::ES_send_wol(uint8_t *buf,uint8_t *wolmac) {
 
 
 #ifdef FROMDECODE_websrv_help
-uint8_t EtherShield::ES_find_key_val(char *str,char *strbuf, uint8_t maxlen,char *key) {
+uint8_t EtherShield::ES_find_key_val(char *str,char *strbuf, uint16_t maxlen,char *key) {
 	return find_key_val(str,strbuf, maxlen,key);
 }
 
@@ -277,7 +290,7 @@ uint8_t EtherShield::ES_parse_ip(uint8_t *bytestr,char *str) {
 	return parse_ip(bytestr,str);
 }
 
-void EtherShield::ES_mk_net_str(char *resultstr,uint8_t *bytestr,uint8_t len,char separator,uint8_t base) {
+void EtherShield::ES_mk_net_str(char *resultstr,uint8_t *bytestr,uint16_t len,char separator,uint8_t base) {
 	mk_net_str(resultstr,bytestr,len,separator,base);
 }
 
@@ -314,4 +327,19 @@ uint8_t EtherShield::ES_udp_client_check_for_dns_answer(uint8_t *buf,uint16_t pl
 }
 
 #endif		// DNS_client
+
+#ifdef DHCP_client
+void EtherShield::ES_dhcp_start(uint8_t *buf, uint8_t *macaddrin, uint8_t *ipaddrin,
+     uint8_t *maskin, uint8_t *gwipin, uint8_t *dhcpsvrin, uint8_t *dnssvrin ) {
+	dhcp_start(buf, macaddrin, ipaddrin, maskin, gwipin, dhcpsvrin, dnssvrin );
+}
+uint8_t EtherShield::ES_dhcp_state(void)
+{       
+        return( dhcp_state() );
+}
+
+uint8_t EtherShield::ES_check_for_dhcp_answer(uint8_t *buf,uint16_t plen){
+	return( check_for_dhcp_answer( buf, plen) );
+}
+#endif		// DHCP_client
 

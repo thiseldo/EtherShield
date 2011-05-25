@@ -43,6 +43,9 @@ uint16_t print_webpage(uint8_t *buf)
 
 void setup(){
 
+  // Initialise SPI interface
+  es.ES_enc28j60SpiInit();
+
   // initialize enc28j60
   es.ES_enc28j60Init(mymac);
 

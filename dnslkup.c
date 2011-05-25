@@ -104,7 +104,7 @@ void dnslkup_request(uint8_t *buf, uint8_t  *hostname)
         send_udp_transmit(buf,i);
 }
 
-// process the answer from the ntp server:
+// process the answer from the dns server:
 // return 1 on sucessful processing of answer.
 // We set also the variable haveDNSanswer
 uint8_t udp_client_check_for_dns_answer(uint8_t *buf,uint16_t plen){

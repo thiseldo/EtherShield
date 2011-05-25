@@ -25,7 +25,7 @@ extern uint8_t eth_type_is_ip_and_my_ip(uint8_t *buf,uint16_t len);
 extern uint8_t eth_type_is_arp_reply(uint8_t *buf);
 extern uint8_t eth_type_is_arp_req(uint8_t *buf);
 
-extern void make_udp_reply_from_request(uint8_t *buf,char *data,uint8_t datalen,uint16_t port);
+extern void make_udp_reply_from_request(uint8_t *buf,char *data,uint16_t datalen,uint16_t port);
 extern void make_echo_reply_from_request(uint8_t *buf,uint16_t len);
 
 extern void make_arp_answer_from_request(uint8_t *buf);
@@ -43,7 +43,7 @@ extern uint16_t checksum(uint8_t *buf, uint16_t len,uint8_t type);
 
 // for a UDP server:
 extern uint8_t eth_type_is_ip_and_my_ip(uint8_t *buf,uint16_t len);
-extern void make_udp_reply_from_request(uint8_t *buf,char *data,uint8_t datalen,uint16_t port);
+extern void make_udp_reply_from_request(uint8_t *buf,char *data,uint16_t datalen,uint16_t port);
 
 // return 0 to just continue in the packet loop and return the position 
 // of the tcp data if there is tcp data part
@@ -180,10 +180,10 @@ extern uint8_t client_ntp_process_answer(uint8_t *buf,uint32_t *time,uint8_t dst
 // needs to be done.
 //
 extern void send_udp_prepare(uint8_t *buf,uint16_t sport, uint8_t *dip, uint16_t dport);
-extern void send_udp_transmit(uint8_t *buf,uint8_t datalen);
+extern void send_udp_transmit(uint8_t *buf,uint16_t datalen);
 
 // send_udp sends via gwip, you must call client_set_gwip at startup, datalen must be less than 220 bytes
-extern void send_udp(uint8_t *buf,char *data,uint8_t datalen,uint16_t sport, uint8_t *dip, uint16_t dport);
+extern void send_udp(uint8_t *buf,char *data,uint16_t datalen,uint16_t sport, uint8_t *dip, uint16_t dport);
 #endif          // UDP_client
 
 

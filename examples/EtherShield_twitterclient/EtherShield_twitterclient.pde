@@ -219,7 +219,10 @@ void setup(){
   pinMode( INPUT_PIN, INPUT );
   digitalWrite( INPUT_PIN, HIGH );    // Set internal pullup
 
-  /*initialize enc28j60*/
+  // Initialise SPI interface
+  es.ES_enc28j60SpiInit();
+
+  // initialize enc28j60
   es.ES_enc28j60Init(mymac);
 
   //init the ethernet/ip layer:
@@ -227,7 +230,6 @@ void setup(){
 
   // init the web client:
   es.ES_client_set_gwip(gwip);  // e.g internal IP of dsl router
-//  es.ES_client_set_wwwip(websrvip);
 
 }
 

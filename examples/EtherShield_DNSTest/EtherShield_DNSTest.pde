@@ -33,7 +33,6 @@ static uint8_t gwip[4] = {
 static uint8_t dnsip[4] = {
   192,168,1,1};    
 
-//
 // global string buffer for hostname message:
 static char hoststr[150];
 
@@ -137,7 +136,10 @@ void browserresult_callback(uint8_t statuscode,uint16_t datapos){
 
 
 void setup(){
-  // initialize enc28j60
+  // Initialise SPI interface
+  es.ES_enc28j60SpiInit();
+
+  // initialize ENC28J60
   es.ES_enc28j60Init(mymac);
 
   //init the ethernet/ip layer:
