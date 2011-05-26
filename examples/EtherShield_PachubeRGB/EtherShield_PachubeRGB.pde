@@ -39,6 +39,10 @@ static uint8_t gwip[4] = { 0,0,0,0 };
 static uint8_t dnsip[4] = { 0,0,0,0 };
 static uint8_t dhcpsvrip[4] = { 0,0,0,0 };
 
+int currentRed = 0;
+int currentGreen = 0;
+int currentBlue = 0;
+
 //====================================================================
 // Pachube declarations
 //====================================================================
@@ -121,10 +125,52 @@ void browserresult_callback(uint8_t statuscode,uint16_t datapos){
 #endif
 
       // Set the RGB LEDS
-      solid( red, green, blue, 0 );
+      fadeTo( red, green, blue );
     }
   }
 }
+
+//function fades existing values to new RGB values
+void fadeTo(int r, int g, int b)
+{
+  //map values
+  r = map(r, 0, 255, 0, 255);
+  g = map(g, 0, 255, 0, 255);
+  b = map(b, 0, 255, 0, 255);
+
+  //output
+  fadeToColour( REDPIN, currentRed, r );
+  fadeToColour( GREENPIN, currentGreen, g );
+  fadeToColour( BLUEPIN, currentBlue, b );
+  
+  currentRed = r;
+  currentGreen = g;
+  currentBlue = b;
+}
+
+// Fade a single colour
+void fadeToColour( int pin, int fromValue, int toValue ) {
+  int increment = (fromValue > toValue ? -1 : 1 );
+  int startValue = (fromValue > toValue ?  : 1 );
+  
+  if( fromValue == toValue ) 
+    return;  // Nothing to do!
+
+  if( fromValue > toValue ) {
+    // Fade down
+    for( int i = fromValue; i >= toValue; i += increment ) {
+      analogWrite( pin, i );
+      delay(10);
+    }
+  } else {
+    // Fade up
+    for( int i = fromValue; i <= toValue; i += increment ) {
+      analogWrite( pin, i );
+      delay(10);
+    }
+  }
+}
+
 
 //function holds RGB values for time t milliseconds, mainly for demo
 void solid(int r, int g, int b, int t)
