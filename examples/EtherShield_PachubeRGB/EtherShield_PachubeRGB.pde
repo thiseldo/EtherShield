@@ -7,6 +7,12 @@
  * The example uses DHCP to determin the local IP address, gateway,
  * and DNS server.
  * 
+ * As a debugging aid, the RGB LED initialy glows red.
+ * Once the ENC28J60 has been initialised it changes to Orange
+ * When the IP address has been allocated it changes to Green.
+ * It then changes to the set colour once the values are being
+ * read from the Pachube application.
+ *
  * Written By and (c) Andrew D Lindsay, May 2011
  * http://blog.thiseldo.co.uk
  * Feel free to use this code, modify and redistribute.
@@ -17,14 +23,28 @@
 
 #define DEBUG
 
+// If using a Common Anode RGB LED (i.e. has connection to +5V
+// Then leave this uncommented this
+#define COMMON_ANODE
+// If using Common Cathode RGB LED (i.e. has common connection to GND)
+// then comment out the above line or change to:
+//#undef COMMON_ANODE
+
+#ifdef COMMON_ANODE
+#define LOW_LIMIT 255
+#define HIGH_LIMIT 0
+#else
+#define LOW_LIMIT 0
+#define HIGH_LIMIT 255
+#endif
+
 // Define where the RGB LED is connected - this is a common cathode LED.
 #define BLUEPIN  3  // Blue LED,  connected to digital pin 3
 #define REDPIN   5  // Red LED,   connected to digital pin 5
 #define GREENPIN 6  // Green LED, connected to digital pin 6
 
 // Currently the only value on the network side that needs to be set
-static uint8_t mymac[6] = { 
-  0x54,0x55,0x58,0x10,0x00,0x25};
+static uint8_t mymac[6] = { 0x54,0x55,0x58,0x10,0x00,0x25};
 
 // IP and netmask allocated by DHCP
 static uint8_t myip[4] = { 0,0,0,0 };
@@ -43,10 +63,10 @@ int currentRed = 0;
 int currentGreen = 0;
 int currentBlue = 0;
 
-//====================================================================
+//============================================================================================================
 // Pachube declarations
-//====================================================================
-#define PORT 80 
+//============================================================================================================
+#define PORT 80                   // HTTP
 
 // the etherShield library does not really support sending additional info in a get request
 // here we fudge it in the host field to add the API key
@@ -55,11 +75,9 @@ int currentBlue = 0;
 // X-PachubeApiKey: xxxxxxxx
 // User-Agent: Arduino/1.0
 // Accept: text/html
-// Set your API key here:
-#define HOSTNAME "www.pachube.com\r\nX-PachubeApiKey: xxxxxxxxxxxxxxxxxxx"
+#define HOSTNAME "www.pachube.com\r\nX-PachubeApiKey: XXXXXXXXXX"          // my API key
 #define WEBSERVER_VHOST "www.pachube.com"
-// The feed - use API V1 csv
-#define HTTPPATH "/api/00000.csv"      
+#define HTTPPATH "/api/NNNNN.csv"      // The feed - use API V1 csv
 
 static uint8_t resend=0;
 static int8_t dns_state=DNS_STATE_INIT;
@@ -134,9 +152,9 @@ void browserresult_callback(uint8_t statuscode,uint16_t datapos){
 void fadeTo(int r, int g, int b)
 {
   //map values
-  r = map(r, 0, 255, 0, 255);
-  g = map(g, 0, 255, 0, 255);
-  b = map(b, 0, 255, 0, 255);
+  r = map(r, 0, 255, LOW_LIMIT, HIGH_LIMIT);
+  g = map(g, 0, 255, LOW_LIMIT, HIGH_LIMIT);
+  b = map(b, 0, 255, LOW_LIMIT, HIGH_LIMIT);
 
   //output
   fadeToColour( REDPIN, currentRed, r );
@@ -176,14 +194,18 @@ void fadeToColour( int pin, int fromValue, int toValue ) {
 void solid(int r, int g, int b, int t)
 {
   //map values
-  r = map(r, 0, 255, 0, 255);
-  g = map(g, 0, 255, 0, 255);
-  b = map(b, 0, 255, 0, 255);
+  r = map(r, 0, 255, LOW_LIMIT, HIGH_LIMIT);
+  g = map(g, 0, 255, LOW_LIMIT, HIGH_LIMIT);
+  b = map(b, 0, 255, LOW_LIMIT, HIGH_LIMIT);
 
   //output
   analogWrite(REDPIN,r);
   analogWrite(GREENPIN,g);
   analogWrite(BLUEPIN,b);
+
+  currentRed = r;
+  currentGreen = g;
+  currentBlue = b;
 
   //hold at this colour set for t ms
   if( delay > 0 )
@@ -200,13 +222,15 @@ void setup(){
   pinMode(GREENPIN, OUTPUT);   
   pinMode(BLUEPIN,  OUTPUT);
   // Set the RGB LEDs off
-  solid(0, 0, 0, 0 );
+  solid(255, 0, 0, 0 );
 
   // Initialise SPI interface
   es.ES_enc28j60SpiInit();
 
   // initialize enc28j60
   es.ES_enc28j60Init(mymac);
+
+  solid(255, 153, 51, 0 );
 
 #ifdef DEBUG
   Serial.print( "ENC28J60 version " );
@@ -216,17 +240,6 @@ void setup(){
 #endif
 
   es.ES_client_set_wwwip(websrvip);  // target web server
-  // If you want some flashing lights on startup uncomment this: 
-/*
-  for( int i=0; i<4; i++ ) {
-   solid(255,0,0, 200 );
-   solid(0,255,0, 200 );
-   solid(0,0,255, 200 );
-   }
-  
-  // All off
-  solid( 0, 0, 0, 0 );
-*/
 
 #ifdef DEBUG
   Serial.println("Ready");
@@ -297,6 +310,7 @@ void loop()
           Serial.println();
 #endif
           gotIp = true;
+          solid(0, 255, 0, 0 );
 
           //init the ethernet/ip layer:
           es.ES_init_ip_arp_udp_tcp(mymac, myip, PORT);
@@ -310,6 +324,7 @@ void loop()
       }
     }
   }
+
 
   // Main processing loop now we have our addresses
   while( es.ES_dhcp_state() == DHCP_STATE_OK ) {
@@ -354,7 +369,8 @@ void loop()
           // we have a result of dns-lookup
           continue;
         }
-      } else {
+      } 
+      else {
         if (dns_state==DNS_STATE_REQUESTED && es.ES_udp_client_check_for_dns_answer( buf, plen ) ){
           dns_state=DNS_STATE_ANSWER;
 #ifdef DEBUG
