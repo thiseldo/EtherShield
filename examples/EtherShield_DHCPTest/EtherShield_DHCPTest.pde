@@ -3,7 +3,6 @@
  */
 
 #include <EtherShield.h>
-#include <EthPacketDump.h>
 
 // Note: This software implements a web server and a web browser.
 // The web server is at "myip" 
