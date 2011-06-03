@@ -32,20 +32,20 @@ static uint8_t enc28j60ControlCs = DEFAULT_ENC28J60_CONTROL_CS;
 // Enable ENC28J60 after disabling interupts
 static void enableChip() {
     cli();
-#ifdef USE_RF12
+//#ifdef USE_RF12
     digitalWrite(enc28j60ControlCs, LOW);
-#else
-    PORTB &= ~(1<<2);
-#endif
+//#else
+//    PORTB &= ~(1<<2);
+//#endif
 }
 
 // Disable ENC28J60 then enable interupts
 static void disableChip() {
-#ifdef USE_RF12
+//#ifdef USE_RF12
     digitalWrite(enc28j60ControlCs, HIGH);
-#else
-    PORTB |= (1<<2);
-#endif
+//#else
+//    PORTB |= (1<<2);
+//#endif
     sei();
 }
 
