@@ -129,7 +129,8 @@ void dhcp_start(uint8_t *buf, uint8_t *macaddrin, uint8_t *ipaddrin,
         gwaddr = gwipin;
         dhcpserver = dhcpsvrin;
         dnsserver = dnssvrin;
-        currentXid = 0x78654321 + millis();        //random();
+        srand(analogRead(0));
+        currentXid = 0x00654321 + rand();
         currentSecs = 0;
         int n;
         for( n=0; n<4; n++ ) {
