@@ -254,7 +254,7 @@ void dhcp_send(uint8_t *buf, uint8_t requestType ) {
         optionIndex++;
 
         // Define options based on if we are reply or request
-
+/*
         if( requestType == DHCPDISCOVER ) {  
                 // Option 2
                 buf[UDP_DATA_P + optionIndex] = 116;     // Auto configuration
@@ -264,8 +264,8 @@ void dhcp_send(uint8_t *buf, uint8_t requestType ) {
                 buf[UDP_DATA_P + optionIndex] = 0x01;      // Value
                 optionIndex++;
         }
-
-        // Option 3
+*/
+        // Client Identifier Option, this is the client mac address
         buf[UDP_DATA_P + optionIndex] = 61;     // Client identifier
         optionIndex++;
         buf[UDP_DATA_P + optionIndex] = 7;      // Length 
@@ -276,7 +276,7 @@ void dhcp_send(uint8_t *buf, uint8_t requestType ) {
                 buf[UDP_DATA_P + optionIndex +i] = macaddr[+i];
         optionIndex += 6;
 
-        // Option 4
+        // Host name Option, we set it as Arduino-xx where xx is the last 2 digits of the mac address 
         buf[UDP_DATA_P + optionIndex] = 12;     // Host name
         optionIndex++;
         buf[UDP_DATA_P + optionIndex] = 10;      // Length 
@@ -287,11 +287,12 @@ void dhcp_send(uint8_t *buf, uint8_t requestType ) {
                 buf[UDP_DATA_P + optionIndex +i] = hostname[i];
                 i++;
         }
-        buf[UDP_DATA_P + optionIndex + i] = 0;
-        i++;
+ //       buf[UDP_DATA_P + optionIndex + i] = 0;
+ //       i++;
         optionIndex += i;
 
         if( requestType == DHCPREQUEST ) {
+                // Request IP address
                 buf[UDP_DATA_P + optionIndex] = 50;     // Requested IP address
                 optionIndex++;
                 buf[UDP_DATA_P + optionIndex] = 4;      // Length 
@@ -300,6 +301,7 @@ void dhcp_send(uint8_t *buf, uint8_t requestType ) {
                         buf[UDP_DATA_P + optionIndex +i] = dhcpip[i];
                 optionIndex += 4;
 
+                // Request using server ip address
                 buf[UDP_DATA_P + optionIndex] = 54;     // Server IP address
                 optionIndex++;
                 buf[UDP_DATA_P + optionIndex] = 4;      // Length 
@@ -309,19 +311,19 @@ void dhcp_send(uint8_t *buf, uint8_t requestType ) {
                 optionIndex += 4;
         }
 
-        // Option 5 - parameter list - minimal list for what we need
+        // Additional information in parameter list - minimal list for what we need
         buf[UDP_DATA_P + optionIndex] = 55;     // Parameter request list
         optionIndex++;
-        buf[UDP_DATA_P + optionIndex] = 4;      // Length 
+        buf[UDP_DATA_P + optionIndex] = 3;      // Length 
         optionIndex++;
         buf[UDP_DATA_P + optionIndex] = 1;      // Subnet mask
-        optionIndex++;
-        buf[UDP_DATA_P + optionIndex] = 15;     // Domain name
         optionIndex++;
         buf[UDP_DATA_P + optionIndex] = 3;      // Route/Gateway
         optionIndex++;
         buf[UDP_DATA_P + optionIndex] = 6;      // DNS Server
         optionIndex++;
+//        buf[UDP_DATA_P + optionIndex] = 15;     // Domain name
+//        optionIndex++;
 
         // payload len should be around 300
         send_udp_transmit(buf, optionIndex);
