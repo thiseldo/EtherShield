@@ -25,6 +25,12 @@ the port pins.
 Updates to various functions in ip_arp_udp_tcp where plen was 8bits, changed to 16bits so larger
 packets can be user.
 
+07/06/2011
+
+Major rewrite of the dhcp code by JCW from Jeelabs http://jeelabs.org
+
+May 2011
+DHCP added
 
 18/02/2011
 
