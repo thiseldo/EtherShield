@@ -171,6 +171,7 @@ void dhcp_send(uint8_t *buf, uint8_t requestType ) {
         memset(buf, 0, 400); //XXX OUCH!   
         send_udp_prepare(buf,(DHCPCLIENT_SRC_PORT_H<<8)|(dhcptid_l&0xff),dhcpip,DHCP_DEST_PORT);
 
+        memcpy(buf + ETH_SRC_MAC, macaddr, 6);
         memset(buf + ETH_DST_MAC, 0xFF, 6);
         buf[IP_TOTLEN_L_P]=0x82;
         buf[IP_PROTO_P]=IP_PROTO_UDP_V;
@@ -235,7 +236,6 @@ void dhcp_send(uint8_t *buf, uint8_t requestType ) {
                 addToBuf(4);      // Length 
                 for( i=0; i<4; i++)
                         addToBuf(dhcpserver[i]);
-
         }
 
         // Additional information in parameter list - minimal list for what we need
