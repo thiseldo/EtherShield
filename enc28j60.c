@@ -23,6 +23,7 @@
 
 static uint8_t Enc28j60Bank;
 static uint16_t gNextPacketPtr;
+static uint8_t erxfcon;
 
 // Where we set the CS pin number
 static uint8_t enc28j60ControlCs = DEFAULT_ENC28J60_CONTROL_CS;
@@ -79,6 +80,19 @@ void enc28j60WriteOp(uint8_t op, uint8_t address, uint8_t data)
     disableChip();
 }
 
+void enc28j60PowerDown() {
+ enc28j60WriteOp(ENC28J60_BIT_FIELD_CLR, ECON1, ECON1_RXEN);
+ while(enc28j60Read(ESTAT) & ESTAT_RXBUSY);
+ while(enc28j60Read(ECON1) & ECON1_TXRTS);
+ enc28j60WriteOp(ENC28J60_BIT_FIELD_SET, ECON2, ECON2_PWRSV);
+}
+
+void enc28j60PowerUp() {
+ enc28j60WriteOp(ENC28J60_BIT_FIELD_CLR, ECON2, ECON2_PWRSV);
+ while(!enc28j60Read(ESTAT) & ESTAT_CLKRDY);
+}
+
+
 void enc28j60ReadBuffer(uint16_t len, uint8_t* data)
 {
     enableChip();
@@ -88,7 +102,8 @@ void enc28j60ReadBuffer(uint16_t len, uint8_t* data)
         *data++ = SPDR;
     }
     disableChip();
-    *data='\0';
+    // Remove next line suggested by user epam - not needed
+//    *data='\0';
 }
 
 static word enc28j60ReadBufferWord() {
@@ -124,15 +139,8 @@ uint8_t enc28j60Read(uint8_t address)
         // do the read
         return enc28j60ReadOp(ENC28J60_READ_CTRL_REG, address);
 }
-/*
-static void enc28j60WriteByte(byte address, byte data) {
-    enc28j60SetBank(address);
-    enc28j60WriteOp(ENC28J60_WRITE_CTRL_REG, address, data);
-}
-*/
+
 void enc28j60WriteWord(byte address, word data) {
-//    enc28j60WriteByte(address, data & 0xff);
-//    enc28j60WriteByte(address + 1, data >> 8);
     enc28j60Write(address, data & 0xff);
     enc28j60Write(address + 1, data >> 8);
 }
@@ -256,7 +264,12 @@ void enc28j60InitWithCs( uint8_t* macaddr, uint8_t csPin )
         // 06 08 -- ff ff ff ff ff ff -> ip checksum for theses bytes=f7f9
         // in binary these poitions are:11 0000 0011 1111
         // This is hex 303F->EPMM0=0x3f,EPMM1=0x30
-	enc28j60Write(ERXFCON, ERXFCON_UCEN|ERXFCON_CRCEN|ERXFCON_PMEN);
+ 
+	//enc28j60Write(ERXFCON, ERXFCON_UCEN|ERXFCON_CRCEN|ERXFCON_PMEN);
+        //Change to add ERXFCON_BCEN recommended by epam
+	//enc28j60Write(ERXFCON, ERXFCON_UCEN|ERXFCON_CRCEN|ERXFCON_PMEN|ERXFCON_BCEN);
+        erxfcon =  ERXFCON_UCEN|ERXFCON_CRCEN|ERXFCON_PMEN|ERXFCON_BCEN;
+	enc28j60Write(ERXFCON, erxfcon );
 	enc28j60WriteWord(EPMM0, 0x303f);
 	enc28j60WriteWord(EPMCSL, 0xf7f9);
         //
@@ -305,6 +318,28 @@ uint8_t enc28j60getrev(void)
         if (rev>5) rev++;
 	return(rev);
 }
+
+// A number of utility functions to enable/disable broadcast and multicast bits
+void enc28j60EnableBroadcast( void ) {
+	erxfcon |= ERXFCON_BCEN;
+	enc28j60Write(ERXFCON, erxfcon);
+}
+
+void enc28j60DisableBroadcast( void ) {
+	erxfcon &= (0xff ^ ERXFCON_BCEN);
+	enc28j60Write(ERXFCON, erxfcon);
+}
+
+void enc28j60EnableMulticast( void ) {
+	erxfcon |= ERXFCON_MCEN;
+	enc28j60Write(ERXFCON, erxfcon);
+}
+
+void enc28j60DisableMulticast( void ) {
+	erxfcon &= (0xff ^ ERXFCON_MCEN);
+	enc28j60Write(ERXFCON, erxfcon);
+}
+
 
 // link status
 uint8_t enc28j60linkup(void)

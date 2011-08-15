@@ -169,10 +169,9 @@ uint8_t udp_client_check_for_dns_answer(uint8_t *buf,uint16_t plen){
 
         while( buf[UDP_DATA_P+i+1] != 1 && ansNum < numAnswers ) {
                 i += buf[UDP_DATA_P+i+9] + 12;
-//                i += 12;
+                ansNum++;
         }
         
-        //if (buf[UDP_DATA_P+i+9] !=4 ){
         if ( ansNum == numAnswers ){
                 dns_ansError=2; // not IPv4
                 return(0);
@@ -201,3 +200,4 @@ void dnslkup_set_dnsip(uint8_t *dnsipaddr)
 #endif
 
 /* end of dnslkup.c */
+

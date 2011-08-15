@@ -70,6 +70,22 @@ uint8_t EtherShield::ES_enc28j60linkup(void) {
 	return enc28j60linkup();
 }
 
+void EtherShield::ES_enc28j60EnableBroadcast( void ) {
+	enc28j60EnableBroadcast();
+}
+
+void EtherShield::ES_enc28j60DisableBroadcast( void ) {
+	enc28j60DisableBroadcast();
+}
+
+void EtherShield::ES_enc28j60EnableMulticast( void ) {
+	enc28j60EnableMulticast();
+}
+
+void EtherShield::ES_enc28j60iDisableMulticast( void ) {
+	enc28j60iDisableMulticast();
+}
+
 uint8_t EtherShield::ES_enc28j60Read( uint8_t address ) {
 	return enc28j60Read( address );
 }
@@ -128,6 +144,11 @@ uint16_t EtherShield::ES_build_tcp_data(uint8_t *buf, uint16_t srcPort ) {
 
 void EtherShield::ES_send_tcp_data(uint8_t *buf,uint16_t dlen ) {
 	send_tcp_data(buf, dlen);
+}
+
+void EtherShield::ES_send_udp_data(uint8_t *buf,uint16_t dlen,uint16_t source_port, uint8_t *dest_ip, uint16_t dest_port) {
+	send_udp_prepare(buf,source_port, dest_ip, dest_port);
+	send_udp_transmit(buf,dlen);
 }
 
 void EtherShield::ES_init_len_info(uint8_t *buf) {
@@ -342,4 +363,12 @@ uint8_t EtherShield::ES_check_for_dhcp_answer(uint8_t *buf,uint16_t plen){
 	return( check_for_dhcp_answer( buf, plen) );
 }
 #endif		// DHCP_client
+
+void EtherShield::ES_enc28j60PowerUp(){
+ enc28j60PowerUp();
+}
+
+void EtherShield::ES_enc28j60PowerDown(){
+ enc28j60PowerDown();
+}
 

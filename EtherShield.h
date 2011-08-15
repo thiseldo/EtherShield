@@ -42,6 +42,12 @@ class EtherShield
 	void ES_enc28j60PacketSend(uint16_t len, uint8_t* packet);
 	uint8_t ES_enc28j60Revision(void);
 	uint8_t ES_enc28j60Read( uint8_t address );
+	void ES_enc28j60EnableBroadcast( void );
+	void ES_enc28j60DisableBroadcast( void );
+	void ES_enc28j60EnableMulticast( void );
+	void ES_enc28j60iDisableMulticast( void );
+	void ES_enc28j60PowerUp();
+	void ES_enc28j60PowerDown();   
 
 	void ES_init_ip_arp_udp_tcp(uint8_t *mymac,uint8_t *myip,uint16_t port);
 	// for a UDP server:
@@ -58,6 +64,9 @@ class EtherShield
 	uint16_t ES_build_tcp_data(uint8_t *buf, uint16_t srcPort );
 	void ES_send_tcp_data(uint8_t *buf,uint16_t dlen );
 
+	// UDP - dirkx
+	void ES_send_udp_data(uint8_t *buf,uint16_t dlen,uint16_t source_port, uint8_t *dest_ip, uint16_t dest_port);
+	
 	void ES_fill_buf_p(uint8_t *buf,uint16_t len, const prog_char *progmem_s);
 	uint16_t ES_checksum(uint8_t *buf, uint16_t len,uint8_t type);
 	void ES_fill_ip_hdr_checksum(uint8_t *buf);

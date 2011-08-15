@@ -16,6 +16,7 @@
 #include <avr/pgmspace.h>
 #include <string.h>
 #include <stdlib.h>
+#include "enc28j60.h"
 #include "ip_config.h"
 #include "net.h"
 #include "dhcp.h"
@@ -105,18 +106,6 @@ uint8_t dhcp_state(void)
         return(dhcpState);
 }
 
-/*
-uint8_t dhcp_get_error_info(void)
-{       
-        return(dhcp_ansError);
-}
-
-uint8_t *dhcp_getip(void)
-{       
-        return(dhcpip);
-}
-*/
-
 // Start request sequence, send DHCPDISCOVER
 // Wait for DHCPOFFER
 // Send DHCPREQUEST
@@ -147,6 +136,11 @@ void dhcp_start(uint8_t *buf, uint8_t *macaddrin, uint8_t *ipaddrin,
         // sprintf( hostname, "Arduino-%02x", macaddr[6] );
         hostname[8] = 'A' + (macaddr[6] >> 4);
         hostname[9] = 'A' + (macaddr[6] & 0x0F);
+
+        // Reception of broadcast packets turned off by default, but
+        // it has been shown that some routers send responses as
+        // broadcasts. Enable here and disable later
+        enc28j60EnableBroadcast();
         dhcp_send( buf, DHCPDISCOVER );
         dhcpState = DHCP_STATE_DISCOVER;
 }
@@ -310,6 +304,8 @@ uint8_t have_dhcpoffer (uint8_t *buf,uint16_t plen) {
 uint8_t have_dhcpack (uint8_t *buf,uint16_t plen) {
     dhcpState = DHCP_STATE_OK;
     leaseStart = millis();
+    // Turn off broadcast. Application if it needs it can re-enable it
+    enc28j60DisableBroadcast();
     return 2;
 }
 
