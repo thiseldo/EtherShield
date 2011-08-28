@@ -146,6 +146,13 @@ void EtherShield::ES_send_tcp_data(uint8_t *buf,uint16_t dlen ) {
 	send_tcp_data(buf, dlen);
 }
 
+void EtherShield::ES_send_udp_data(uint8_t *buf, uint8_t *destmac,uint16_t dlen,uint16_t source_port, uint8_t *dest_ip, uint16_t dest_port) {
+	send_udp_prepare(buf,source_port, dest_ip, dest_port);
+	for(uint8_t i = 0; i< 6; i++ )
+		buf[ETH_DST_MAC+i] = destmac[i];
+	send_udp_transmit(buf,dlen);
+}
+
 void EtherShield::ES_send_udp_data(uint8_t *buf,uint16_t dlen,uint16_t source_port, uint8_t *dest_ip, uint16_t dest_port) {
 	send_udp_prepare(buf,source_port, dest_ip, dest_port);
 	send_udp_transmit(buf,dlen);
@@ -347,6 +354,63 @@ uint8_t EtherShield::ES_udp_client_check_for_dns_answer(uint8_t *buf,uint16_t pl
 	return( udp_client_check_for_dns_answer( buf, plen) );
 }
 
+
+// Perform all processing to resolve a hostname to IP address.
+// Returns 1 for successful Name resolution, 0 otherwise
+uint8_t EtherShield::resolveHostname(uint8_t *buf, uint16_t buffer_size, uint8_t *hostname ) {
+  uint16_t dat_p;
+  int plen = 0;
+  long lastDnsRequest = millis();
+  uint8_t dns_state = DNS_STATE_INIT;
+  boolean gotAddress = false;
+  uint8_t dnsTries = 10;	// After 10 attempts fail gracefully so other action can be carried out
+
+  while( !gotAddress ) {
+    // handle ping and wait for a tcp packet
+    plen = enc28j60PacketReceive(buffer_size, buf);
+    dat_p=packetloop_icmp_tcp(buf,plen);
+
+    // We have a packet
+    // Check if IP data
+    if (dat_p == 0) {
+      if (client_waiting_gw() ) {
+        // No ARP received for gateway
+        continue;
+      }
+      // It has IP data
+      if (dns_state==DNS_STATE_INIT) {
+        dns_state=DNS_STATE_REQUESTED;
+        lastDnsRequest = millis();
+        dnslkup_request(buf,hostname);
+        continue;
+      }
+      if (dns_state!=DNS_STATE_ANSWER){
+        // retry every minute if dns-lookup failed:
+        if (millis() > (lastDnsRequest + 60000L) ){
+	  if( --dnsTries <= 0 ) 
+	    return 0;		// Failed to allocate address
+
+          dns_state=DNS_STATE_INIT;
+          lastDnsRequest = millis();
+        }
+        // don't try to use client before
+        // we have a result of dns-lookup
+
+        continue;
+      }
+    } 
+    else {
+      if (dns_state==DNS_STATE_REQUESTED && udp_client_check_for_dns_answer( buf, plen ) ){
+        dns_state=DNS_STATE_ANSWER;
+        client_set_wwwip(dnslkup_getip());
+	gotAddress = true;
+      }
+    }
+  }
+  
+  return 1;
+}
+
 #endif		// DNS_client
 
 #ifdef DHCP_client
@@ -362,6 +426,59 @@ uint8_t EtherShield::ES_dhcp_state(void)
 uint8_t EtherShield::ES_check_for_dhcp_answer(uint8_t *buf,uint16_t plen){
 	return( check_for_dhcp_answer( buf, plen) );
 }
+
+// Utility functions 
+
+// Perform all processing to get an IP address plus other addresses returned, e.g. gw, dns, dhcp server.
+// Returns 1 for successful IP address allocation, 0 otherwise
+uint8_t EtherShield::allocateIPAddress(uint8_t *buf, uint16_t buffer_size, uint8_t *mymac, uint16_t myport, uint8_t *myip, uint8_t *mynetmask, uint8_t *gwip, uint8_t *dnsip, uint8_t *dhcpsvrip ) {
+  uint16_t dat_p;
+  int plen = 0;
+  long lastDhcpRequest = millis();
+  uint8_t dhcpState = 0;
+  boolean gotIp = false;
+  uint8_t dhcpTries = 10;	// After 10 attempts fail gracefully so other action can be carried out
+
+  dhcp_start( buf, mymac, myip, mynetmask,gwip, dnsip, dhcpsvrip );
+
+  while( !gotIp ) {
+    // handle ping and wait for a tcp packet
+    plen = enc28j60PacketReceive(buffer_size, buf);
+    dat_p=packetloop_icmp_tcp(buf,plen);
+    if(dat_p==0) {
+      int retstat = check_for_dhcp_answer( buf, plen);
+      dhcpState = dhcp_state();
+      // we are idle here
+      if( dhcpState != DHCP_STATE_OK ) {
+        if (millis() > (lastDhcpRequest + 10000L) ){
+          lastDhcpRequest = millis();
+	  if( --dhcpTries <= 0 ) 
+		  return 0;		// Failed to allocate address
+          // send dhcp
+          dhcp_start( buf, mymac, myip, mynetmask,gwip, dnsip, dhcpsvrip );
+        }
+      } else {
+        if( !gotIp ) {
+          gotIp = true;
+
+          //init the ethernet/ip layer:
+          init_ip_arp_udp_tcp(mymac, myip, myport);
+
+          // Set the Router IP
+          client_set_gwip(gwip);  // e.g internal IP of dsl router
+
+          // Set the DNS server IP address if required, or use default
+          dnslkup_set_dnsip( dnsip );
+
+        }
+      }
+    }
+  }
+
+  return 1;
+
+}
+
 #endif		// DHCP_client
 
 void EtherShield::ES_enc28j60PowerUp(){
@@ -371,4 +488,5 @@ void EtherShield::ES_enc28j60PowerUp(){
 void EtherShield::ES_enc28j60PowerDown(){
  enc28j60PowerDown();
 }
+
 

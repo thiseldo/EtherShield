@@ -66,6 +66,7 @@ class EtherShield
 
 	// UDP - dirkx
 	void ES_send_udp_data(uint8_t *buf,uint16_t dlen,uint16_t source_port, uint8_t *dest_ip, uint16_t dest_port);
+	void ES_send_udp_data(uint8_t *buf, uint8_t *destmac,uint16_t dlen,uint16_t source_port, uint8_t *dest_ip, uint16_t dest_port);
 	
 	void ES_fill_buf_p(uint8_t *buf,uint16_t len, const prog_char *progmem_s);
 	uint16_t ES_checksum(uint8_t *buf, uint16_t len,uint8_t type);
@@ -103,6 +104,7 @@ class EtherShield
 	void ES_dnslkup_set_dnsip(uint8_t *dnsipaddr);
 	void ES_dnslkup_request(uint8_t *buf, uint8_t *hoststr );
 	uint8_t ES_udp_client_check_for_dns_answer(uint8_t *buf,uint16_t plen);
+	uint8_t resolveHostname(uint8_t *buf, uint16_t buffer_size, uint8_t *hostname );
 #endif
 
 #ifdef DHCP_client
@@ -112,6 +114,7 @@ class EtherShield
 			uint8_t *dnssvrin );
 
 	uint8_t ES_check_for_dhcp_answer(uint8_t *buf,uint16_t plen);
+	uint8_t allocateIPAddress(uint8_t *buf, uint16_t buffer_size, uint8_t *mymac, uint16_t myport, uint8_t *myip, uint8_t *mynetmask, uint8_t *gwip, uint8_t *dnsip, uint8_t *dhcpsvrip );
 #endif
 
 #define HTTP_HEADER_START ((uint16_t)TCP_SRC_PORT_H_P+(buf[TCP_HEADER_LEN_P]>>4)*4)
