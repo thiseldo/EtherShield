@@ -19,16 +19,23 @@
  * 
  */
 
+// If using a Nanode (www.nanode.eu) instead of Arduino and ENC28J60 EtherShield then
+// use this define:
+#define NANODE
+
 #include <EtherShield.h>
+#ifdef NANODE
+#include <NanodeMAC.h>
+#endif
 
 #define DEBUG
 
 // If using a Common Anode RGB LED (i.e. has connection to +5V
 // Then leave this uncommented this
-#define COMMON_ANODE
+//#define COMMON_ANODE
 // If using Common Cathode RGB LED (i.e. has common connection to GND)
 // then comment out the above line or change to:
-//#undef COMMON_ANODE
+#undef COMMON_ANODE
 
 #ifdef COMMON_ANODE
 #define LOW_LIMIT 255
@@ -43,8 +50,15 @@
 #define REDPIN   5  // Red LED,   connected to digital pin 5
 #define GREENPIN 6  // Green LED, connected to digital pin 6
 
-// Currently the only value on the network side that needs to be set
-static uint8_t mymac[6] = { 0x54,0x55,0x58,0x10,0x00,0x25};
+// Please modify the following lines. mac and ip have to be unique
+// in your local area network. You can not have the same numbers in
+// two devices:
+// how did I get the mac addr? Translate the first 3 numbers into ascii is: TUX
+#ifdef NANODE
+static uint8_t mymac[6] = { 0,0,0,0,0,0 };
+#else
+static uint8_t mymac[6] = { 0x54,0x55,0x58,0x12,0x34,0x56 };
+#endif
 
 // IP and netmask allocated by DHCP
 static uint8_t myip[4] = { 0,0,0,0 };
@@ -75,59 +89,90 @@ int currentBlue = 0;
 // X-PachubeApiKey: xxxxxxxx
 // User-Agent: Arduino/1.0
 // Accept: text/html
-#define HOSTNAME "www.pachube.com\r\nX-PachubeApiKey: XXXXXXXXXX"          // my API key
+// Replace xxxxxxxxxxxxx with your Pachube API key
+#define HOSTNAME "www.pachube.com\r\nX-PachubeApiKey: xxxxxxxxxxxxxxxxxxxxxxxxxxxxx"          // API key
 #define WEBSERVER_VHOST "www.pachube.com"
-#define HTTPPATH "/api/NNNNN.csv"      // The feed - use API V1 csv
+// Replace nnnnn with your Feed number
+#define HTTPPATH "/api/nnnnn.csv"      // The feed - use API V2 csv
 
 static uint8_t resend=0;
 static int8_t dns_state=DNS_STATE_INIT;
 
 EtherShield es=EtherShield();
+#ifdef NANODE
+NanodeMAC mac( mymac );
+#endif
 
 #define BUFFER_SIZE 750
 static uint8_t buf[BUFFER_SIZE+1];
 
 void browserresult_callback(uint8_t statuscode,uint16_t datapos){
+char headerEnd[2] = {'\r','\n' };
+int contentLen = 0;
+
 #ifdef DEBUG
   Serial.print("Received data, status:"); 
   Serial.println(statuscode,DEC);
+//  Serial.println((char*)&buf[datapos]);
 #endif
+
   if (datapos != 0)
   {
+    // Scan headers looking for Content-Length: 5
+    // Start of a line, look for "Content-Length: "
     // now search for the csv data - it follows the first blank line
-    // I'm sure that there is an easier way to search for a blank line - but I threw this together quickly
-    // and it works for me.
     uint16_t pos = datapos;
     while (buf[pos])    // loop until end of buffer (or we break out having found what we wanted)
     {
-      while (buf[pos]) if (buf[pos++] == '\n') break;   // find the first line feed
-      if (buf[pos] == 0) break; // run out of buffer
-      if (buf[pos++] == '\r') break; // if it is followed by a carriage return then it is a blank line (\r\n\r\n)
+      // Look for line with \r\n on its own
+      if( strncmp ((char*)&buf[pos],headerEnd, 2) == 0 ) {
+        Serial.println("End of headers");
+        pos += 2;
+        break;
+      }
+      
+      if( strncmp ((char*)&buf[pos], "Content-Length:", 15) == 0 ) {
+        // Found Content-Length 
+        pos += 16;          // Skip to value
+        char ch = buf[pos++];
+        contentLen = 0;
+        while(ch >= '0' && ch <= '9' ) {  // Only digits
+          contentLen *= 10;
+          contentLen += (ch - '0');
+          ch = buf[pos++];
+        }
+#ifdef DEBUG
+        Serial.print("Content Length: " );
+        Serial.println( contentLen, DEC );
+#endif
+      }
+      // Scan to end of line
+      while( buf[pos++] != '\r' ) { }
+      while( buf[pos++] != '\n' ) { }
+      
+      if (buf[pos] == 0) break; // run out of buffer??
     }
     if (buf[pos])  // we didn't run out of buffer
     {
-      pos++;  //skip over the '\n' remaining
-#ifdef DEBUG
-      Serial.println((char*)&buf[pos]);
-#endif
+
       int red = 0;
       int green = 0;
       int blue = 0;
       int index = pos;
       char ch = buf[index++];
-      while(ch != ',' && ch != 0 ) {
+      while(ch >= '0' && ch <= '9' ) {
         red *= 10;
         red += (ch - '0');
         ch = buf[index++];
       }
       ch = buf[index++];
-      while(ch != ',' && ch != 0 ) {
+      while(ch >= '0' && ch <= '9') {
         green *= 10;
         green += (ch - '0');
         ch = buf[index++];
       }
       ch = buf[index++];
-      while(ch != ',' && ch != 0 ) {
+      while(ch >= '0' && ch <= '9' && index < (pos+contentLen+1)) {
         blue *= 10;
         blue += (ch - '0');
         ch = buf[index++];
@@ -143,6 +188,7 @@ void browserresult_callback(uint8_t statuscode,uint16_t datapos){
 #endif
 
       // Set the RGB LEDS
+//      solid( red, green, blue, 0 );
       fadeTo( red, green, blue );
     }
   }
@@ -228,19 +274,35 @@ void setup(){
   es.ES_enc28j60SpiInit();
 
   // initialize enc28j60
+#ifdef NANODE
+  es.ES_enc28j60Init(mymac,8);
+#else
   es.ES_enc28j60Init(mymac);
+#endif
 
   solid(255, 153, 51, 0 );
 
 #ifdef DEBUG
   Serial.print( "ENC28J60 version " );
   Serial.println( es.ES_enc28j60Revision(), HEX);
-  if( es.ES_enc28j60Revision() <= 0 ) 
+  if( es.ES_enc28j60Revision() <= 0 ) {
     Serial.println( "Failed to access ENC28J60");
+
+    while(1);    // Just loop here
+  }
 #endif
 
   es.ES_client_set_wwwip(websrvip);  // target web server
-
+/*  
+  for( int i=0; i<4; i++ ) {
+   solid(255,0,0, 200 );
+   solid(0,255,0, 200 );
+   solid(0,0,255, 200 );
+   }
+  
+  // All off
+  solid( 0, 0, 0, 0 );
+*/
 #ifdef DEBUG
   Serial.println("Ready");
 #endif
@@ -268,63 +330,37 @@ void loop()
   uint8_t dhcpState = 0;
   boolean gotIp = false;
 
-  es.ES_dhcp_start( buf, mymac, myip, mynetmask,gwip, dnsip, dhcpsvrip );
-
-  while( !gotIp ) {
-    dns_state=DNS_STATE_INIT;
-    // handle ping and wait for a tcp packet
-    plen = es.ES_enc28j60PacketReceive(BUFFER_SIZE, buf);
-    dat_p=es.ES_packetloop_icmp_tcp(buf,plen);
-    if(dat_p==0) {
-      int retstat = es.ES_check_for_dhcp_answer( buf, plen);
-      dhcpState = es.ES_dhcp_state();
-      // we are idle here
-      if( dhcpState != DHCP_STATE_OK ) {
-        if (millis() > (lastDhcpRequest + 10000L) ){
-          lastDhcpRequest = millis();
-          // send dhcp
+  // Get IP Address details
+  if( es.allocateIPAddress(buf, BUFFER_SIZE, mymac, 80, myip, mynetmask, gwip, dnsip, dhcpsvrip ) > 0 ) {
 #ifdef DEBUG
-          Serial.println("Sending DHCP Request");
-#endif
-          es.ES_dhcp_start( buf, mymac, myip, mynetmask,gwip, dnsip, dhcpsvrip );
-        }
-      } 
-      else {
-        if( !gotIp ) {
-#ifdef DEBUG
-          // Display the results:
-          Serial.print( "My IP: " );
-          printIP( myip );
-          Serial.println();
+    // Display the results:
+    Serial.print( "My IP: " );
+    printIP( myip );
+    Serial.println();
 
-          Serial.print( "Netmask: " );
-          printIP( mynetmask );
-          Serial.println();
+    Serial.print( "Netmask: " );
+    printIP( mynetmask );
+    Serial.println();
 
-          Serial.print( "DNS IP: " );
-          printIP( dnsip );
-          Serial.println();
+    Serial.print( "DNS IP: " );
+    printIP( dnsip );
+    Serial.println();
 
-          Serial.print( "GW IP: " );
-          printIP( gwip );
-          Serial.println();
-#endif
-          gotIp = true;
-          solid(0, 255, 0, 0 );
-
-          //init the ethernet/ip layer:
-          es.ES_init_ip_arp_udp_tcp(mymac, myip, PORT);
-
-          // Set the Router IP
-          es.ES_client_set_gwip(gwip);  // e.g internal IP of dsl router
-
-          // Set the DNS server IP address if required, or use default
-          es.ES_dnslkup_set_dnsip( dnsip );
-        }
-      }
+    Serial.print( "GW IP: " );
+    printIP( gwip );
+    Serial.println();
+#endif    
+    // Perform DNS Lookup for host name
+    if( es.resolveHostname(buf, BUFFER_SIZE,(uint8_t*)WEBSERVER_VHOST ) > 0 ) {
+      Serial.println("Hostname resolved");
+    } else {
+      Serial.println("Failed to resolve hostname");
     }
+  } 
+  else {
+    // Failed, do something else....
+    Serial.println("Failed to get IP Address");
   }
-
 
   // Main processing loop now we have our addresses
   while( es.ES_dhcp_state() == DHCP_STATE_OK ) {
@@ -341,48 +377,11 @@ void loop()
           // No ARP received for gateway
           continue;
         }
-        // It has IP data
-        if (dns_state==DNS_STATE_INIT){
-#ifdef DEBUG
-          Serial.println("Request DNS" );
-#endif
-          sec=0;
-          dns_state=DNS_STATE_REQUESTED;
-          lastDnsRequest = millis();
-          es.ES_dnslkup_request(buf,(uint8_t*)WEBSERVER_VHOST);
-          continue;
-        }
-        if (dns_state==DNS_STATE_REQUESTED && es.ES_udp_client_check_for_dns_answer( buf, plen ) ){
-#ifdef DEBUG
-          Serial.println( "DNS Answer");
-#endif
-          dns_state=DNS_STATE_ANSWER;
-          es.ES_client_set_wwwip(es.ES_dnslkup_getip());
-        }
-        if (dns_state!=DNS_STATE_ANSWER){
-          // retry every minute if dns-lookup failed:
-          if (millis() > (lastDnsRequest + 60000L) ){
-            dns_state=DNS_STATE_INIT;
-            lastDnsRequest = millis();
-          }
-          // don't try to use web client before
-          // we have a result of dns-lookup
-          continue;
-        }
       } 
-      else {
-        if (dns_state==DNS_STATE_REQUESTED && es.ES_udp_client_check_for_dns_answer( buf, plen ) ){
-          dns_state=DNS_STATE_ANSWER;
-#ifdef DEBUG
-          Serial.println( "DNS Answer 2");
-#endif
-          es.ES_client_set_wwwip(es.ES_dnslkup_getip());
-        }
-      }
     }
     // If we have IP address for server and its time then request data
 
-    if( dns_state == DNS_STATE_ANSWER && millis() - timetosend > 3000)  // every 10 seconds
+    if( millis() - timetosend > 3000)  // every 10 seconds
     {
       timetosend = millis();
 #ifdef DEBUG
