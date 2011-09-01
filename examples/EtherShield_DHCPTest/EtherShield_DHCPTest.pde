@@ -87,7 +87,7 @@ void setup() {
   
   Serial.println("Requesting IP Addresse");
   // Get IP Address details
-  if( es.allocateIPAddress(buf, BUFFER_SIZE, mymac, 80, myip, mynetmask, gwip, dnsip, dhcpsvrip ) > 0 ) {
+  if( es.allocateIPAddress(buf, BUFFER_SIZE, mymac, 80, myip, mynetmask, gwip, dhcpsvrip, dnsip ) > 0 ) {
     // Display the results:
     Serial.print( "My IP: " );
     printIP( myip );

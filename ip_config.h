@@ -48,7 +48,7 @@
 
 //------------- functions in ip_arp_udp_tcp.c --------------
 // an NTP client (ntp clock):
-#define NTP_client 1
+//#define NTP_client 1
 // a spontaneous sending UDP client
 #define UDP_client 1
 
@@ -57,7 +57,7 @@
 #define PINGPATTERN 0x42
 
 // a UDP wake on lan sender:
-#define WOL_client
+//#define WOL_client
 
 // a "web browser". This can be use to upload data
 // to a web server on the internet by encoding the data 
