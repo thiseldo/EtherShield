@@ -83,13 +83,14 @@ class EtherShield
 	void ES_www_server_reply(uint8_t *buf,uint16_t dlen);
 	
 	// -- client functions --
-#if defined (TCP_client) || defined (WWW_client) || defined (NTP_client)
 	uint8_t ES_client_store_gw_mac(uint8_t *buf);	//, uint8_t *gwipaddr);
 	void ES_client_set_gwip(uint8_t *gwipaddr);
-	void ES_client_set_wwwip(uint8_t *wwwipaddr);
+//	void ES_client_set_wwwip(uint8_t *wwwipaddr);
 	void ES_client_tcp_set_serverip(uint8_t *ipaddr);
 	void ES_client_arp_whohas(uint8_t *buf,uint8_t *ip_we_search);
 	uint8_t ES_client_waiting_gw( void );
+
+#if defined (TCP_client) || defined (WWW_client) || defined (NTP_client)
 	uint8_t ES_client_tcp_req(uint8_t (*result_callback)(uint8_t fd,uint8_t statuscode,uint16_t data_start_pos_in_buf, uint16_t len_of_data),uint16_t (*datafill_callback)(uint8_t fd),uint16_t port );
 
 	void ES_tcp_client_send_packet(uint8_t *buf,uint16_t dest_port, uint16_t src_port, uint8_t flags, uint8_t max_segment_size, 

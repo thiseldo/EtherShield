@@ -199,7 +199,6 @@ void EtherShield::ES_www_server_reply(uint8_t *buf,uint16_t dlen) {
 	www_server_reply(buf,dlen);
 }
 	
-#if defined (TCP_client) || defined (WWW_client) || defined (NTP_client)
 uint8_t EtherShield::ES_client_store_gw_mac(uint8_t *buf) {
 	return client_store_gw_mac(buf);
 }
@@ -208,9 +207,11 @@ void EtherShield::ES_client_set_gwip(uint8_t *gwipaddr) {
 	client_set_gwip(gwipaddr);
 }
 
+/*
 void EtherShield::ES_client_set_wwwip(uint8_t *wwwipaddr) {
 	client_set_wwwip(wwwipaddr);
 }
+*/
 
 void EtherShield::ES_client_tcp_set_serverip(uint8_t *ipaddr) {
 	client_tcp_set_serverip(ipaddr);
@@ -220,6 +221,7 @@ void EtherShield::ES_client_arp_whohas(uint8_t *buf,uint8_t *ip_we_search) {
 	client_arp_whohas(buf, ip_we_search);
 }
 
+#if defined (TCP_client) || defined (WWW_client) || defined (NTP_client)
 uint8_t EtherShield::ES_client_tcp_req(uint8_t (*result_callback)(uint8_t fd,uint8_t statuscode,uint16_t data_start_pos_in_buf, uint16_t len_of_data),uint16_t (*datafill_callback)(uint8_t fd),uint16_t port ) {
 	return client_tcp_req( result_callback, datafill_callback, port );
 }
@@ -402,7 +404,8 @@ uint8_t EtherShield::resolveHostname(uint8_t *buf, uint16_t buffer_size, uint8_t
     else {
       if (dns_state==DNS_STATE_REQUESTED && udp_client_check_for_dns_answer( buf, plen ) ){
         dns_state=DNS_STATE_ANSWER;
-        client_set_wwwip(dnslkup_getip());
+        //client_set_wwwip(dnslkup_getip());
+        client_tcp_set_serverip(dnslkup_getip());
 	gotAddress = true;
       }
     }

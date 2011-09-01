@@ -71,11 +71,11 @@ extern void send_tcp_data(uint8_t *buf,uint16_t dlen );
 #endif          // WWW_client TCP_client etc
 
 
-#if defined (WWW_client) || defined (TCP_client) 
-#define client_set_wwwip client_tcp_set_serverip
+//#if defined (WWW_client) || defined (TCP_client) 
+//#define client_set_wwwip client_tcp_set_serverip
 // set the ip of the next tcp session that we open to a server
 extern void client_tcp_set_serverip(uint8_t *ipaddr);
-#endif
+//#endif
 
 
 #ifdef TCP_client

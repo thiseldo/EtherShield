@@ -34,7 +34,6 @@ static uint8_t wwwport_h=0;  // Note: never use same as TCPCLIENT_SRC_PORT_H
 // just lower byte, the upper byte is TCPCLIENT_SRC_PORT_H:
 static uint8_t tcpclient_src_port_l=1; 
 static uint8_t tcp_fd=0; // a file descriptor, will be encoded into the port
-static uint8_t tcpsrvip[4];
 static uint8_t tcp_client_state=0;
 // TCP client Destination port
 static uint8_t tcp_client_port_h=0;
@@ -72,7 +71,6 @@ static char *client_urlbuf_var;
 static uint8_t *bufptr=0; // ugly workaround for backward compatibility
 #endif
 static void (*icmp_callback)(uint8_t *ip);
-#if defined (NTP_client) || defined (UDP_client) || defined (TCP_client) || defined (PING_client)
 // 0=wait, 1=first req no anser, 2=have gwmac, 4=refeshing but have gw mac, 8=accept an arp reply
 #define WGW_INITIAL_ARP 1
 #define WGW_HAVE_GW_MAC 2
@@ -81,8 +79,8 @@ static void (*icmp_callback)(uint8_t *ip);
 static int16_t delaycnt=1;
 static uint8_t gwip[4];
 static uint8_t gwmacaddr[6];
+static uint8_t tcpsrvip[4];
 static volatile uint8_t waitgwmac=WGW_INITIAL_ARP;
-#endif
 
 uint8_t macaddr[6];
 static uint8_t ipaddr[4];
@@ -1074,6 +1072,7 @@ void client_set_wwwip(uint8_t *wwwipaddr)
         }
 }
 */
+
 void client_set_gwip(uint8_t *gwipaddr)
 {
         uint8_t i=0;
@@ -1085,7 +1084,6 @@ void client_set_gwip(uint8_t *gwipaddr)
 }
 #endif
 
-#if defined (TCP_client)
 void client_tcp_set_serverip(uint8_t *ipaddr)
 {
         uint8_t i=0;
@@ -1094,7 +1092,6 @@ void client_tcp_set_serverip(uint8_t *ipaddr)
                 i++;
         }
 }
-#endif // TCP_client
 
 #if defined (TCP_client)
 // Make a tcp syn packet
