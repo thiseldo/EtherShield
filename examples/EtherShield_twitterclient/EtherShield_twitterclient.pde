@@ -2,7 +2,14 @@
  * Arduino ENC28J60 Ethernet shield twitter client
  */
 
+// If using a Nanode (www.nanode.eu) instead of Arduino and ENC28J60 EtherShield then
+// use this define:
+#define NANODE
+
 #include "EtherShield.h"
+#ifdef NANODE
+#include <NanodeMAC.h>
+#endif
 
 // A pin to use as input to trigger tweets
 #define INPUT_PIN 2
@@ -14,11 +21,13 @@
 // in your local area network. You can not have the same numbers in
 // two devices:
 // how did I get the mac addr? Translate the first 3 numbers into ascii is: TUX
-static uint8_t mymac[6] = {
-  0x54,0x55,0x58,0x10,0x00,0x25};
+#ifdef NANODE
+static uint8_t mymac[6] = { 0,0,0,0,0,0 };
+#else
+static uint8_t mymac[6] = { 0x54,0x55,0x58,0x12,0x34,0x56 };
+#endif
 
-static uint8_t myip[4] = {
-  192,168,1,25};
+static uint8_t myip[4] = { 192,168,1,25};
 
 // IP address of the twitter server to contact (IP of the first portion of the URL):
 // DNS look-up is a feature which we still need to add.
@@ -48,8 +57,7 @@ static uint8_t websrvip[4] = { 0, 0, 0, 0 };
 // Default gateway. The ip address of your DSL router. It can be set to the same as
 // websrvip the case where there is no default GW to access the 
 // web server (=web server is on the same lan as this host) 
-static uint8_t gwip[4] = {
-  192,168,1,1};
+static uint8_t gwip[4] = { 192,168,1,1};
 //
 // global string buffer for twitter message:
 static char statusstr[150];
@@ -81,6 +89,9 @@ static char datebuf[DATE_BUFFER_SIZE]="none";
 static uint8_t buf[BUFFER_SIZE+1];
 
 EtherShield es=EtherShield();
+#ifdef NANODE
+NanodeMAC mac( mymac );
+#endif
 
 uint8_t verify_password(char *str)
 {
@@ -223,7 +234,11 @@ void setup(){
   es.ES_enc28j60SpiInit();
 
   // initialize enc28j60
+#ifdef NANODE
+  es.ES_enc28j60Init(mymac,8);
+#else
   es.ES_enc28j60Init(mymac);
+#endif
 
   //init the ethernet/ip layer:
   es.ES_init_ip_arp_udp_tcp(mymac,myip, MYWWWPORT);
@@ -308,7 +323,7 @@ void loop(){
     } else {
       if (dns_state==1 && es.ES_udp_client_check_for_dns_answer( buf, plen ) ){
         dns_state=2;
-        es.ES_client_set_wwwip(es.ES_dnslkup_getip());
+        es.ES_client_tcp_set_serverip(es.ES_dnslkup_getip());
       }
     }
 

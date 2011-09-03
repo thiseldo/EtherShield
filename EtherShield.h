@@ -45,7 +45,7 @@ class EtherShield
 	void ES_enc28j60EnableBroadcast( void );
 	void ES_enc28j60DisableBroadcast( void );
 	void ES_enc28j60EnableMulticast( void );
-	void ES_enc28j60iDisableMulticast( void );
+	void ES_enc28j60DisableMulticast( void );
 	void ES_enc28j60PowerUp();
 	void ES_enc28j60PowerDown();   
 

@@ -318,7 +318,7 @@ extern uint8_t enc28j60linkup(void);
 extern void enc28j60EnableBroadcast( void );
 extern void enc28j60DisableBroadcast( void );
 extern void enc28j60EnableMulticast( void );
-extern void enc28j60iDisableMulticast( void );
+extern void enc28j60DisableMulticast( void );
 extern void enc28j60PowerDown();
 extern void enc28j60PowerUp();
 
