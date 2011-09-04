@@ -255,11 +255,10 @@ void EtherShield::ES_client_set_gwip(uint8_t *gwipaddr) {
 	client_set_gwip(gwipaddr);
 }
 
-/*
 void EtherShield::ES_client_set_wwwip(uint8_t *wwwipaddr) {
-	client_set_wwwip(wwwipaddr);
+	//client_set_wwwip(wwwipaddr);
+	client_tcp_set_serverip(ipaddr);
 }
-*/
 
 void EtherShield::ES_client_tcp_set_serverip(uint8_t *ipaddr) {
 	client_tcp_set_serverip(ipaddr);

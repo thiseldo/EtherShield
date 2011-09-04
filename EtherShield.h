@@ -85,7 +85,7 @@ class EtherShield
 	// -- client functions --
 	uint8_t ES_client_store_gw_mac(uint8_t *buf);	//, uint8_t *gwipaddr);
 	void ES_client_set_gwip(uint8_t *gwipaddr);
-//	void ES_client_set_wwwip(uint8_t *wwwipaddr);
+	void ES_client_set_wwwip(uint8_t *wwwipaddr);
 	void ES_client_tcp_set_serverip(uint8_t *ipaddr);
 	void ES_client_arp_whohas(uint8_t *buf,uint8_t *ip_we_search);
 	uint8_t ES_client_waiting_gw( void );
