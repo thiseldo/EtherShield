@@ -14,12 +14,16 @@
  *********************************************/
 // Updated 16/06/2010 ADL Added configurable CS, 16 bit writes and reads.
 
+
+#include "enc28j60.h"
 #include <avr/io.h>
 #include <inttypes.h>
 #include <avr/interrupt.h>
-
-#include "enc28j60.h"
-#include "WConstants.h"  //all things wiring / arduino
+#if (ARDUINO >= 100)
+#include <Arduino.h>
+#else
+#include <WProgram.h>
+#endif
 
 static uint8_t Enc28j60Bank;
 static uint16_t gNextPacketPtr;

@@ -101,7 +101,7 @@ class EtherShield
 #ifdef DNS_client
 	uint8_t ES_dnslkup_haveanswer(void);
 	uint8_t ES_dnslkup_get_error_info(void);
-	uint8_t * ES_dnslkup_getip(void);
+	uint8_t *ES_dnslkup_getip( void );
 	void ES_dnslkup_set_dnsip(uint8_t *dnsipaddr);
 	void ES_dnslkup_request(uint8_t *buf, uint8_t *hoststr );
 	uint8_t ES_udp_client_check_for_dns_answer(uint8_t *buf,uint16_t plen);
@@ -123,10 +123,10 @@ class EtherShield
 	// ----- http get
 #ifdef FLASH_VARS
 	void ES_client_browse_url(prog_char *urlbuf, char *urlbuf_varpart, prog_char *hoststr,
-			void (*callback)(uint8_t,uint16_t));
+			void (*callback)(uint8_t,uint16_t,uint16_t));
 #else
 	void ES_client_browse_url(char *urlbuf, char *urlbuf_varpart, char *hoststr,
-			void (*callback)(uint8_t,uint16_t));
+			void (*callback)(uint8_t,uint16_t,uint16_t));
 #endif
 	// The callback is a reference to a function which must look like this:
 	// void browserresult_callback(uint8_t statuscode,uint16_t datapos)
@@ -183,6 +183,13 @@ class EtherShield
 
 	uint8_t ES_parse_ip(uint8_t *bytestr,char *str);
 	void ES_mk_net_str(char *resultstr,uint8_t *bytestr,uint16_t len,char separator,uint8_t base);
+
+
+	uint8_t ES_nextTcpState( uint8_t *buf,uint16_t plen );
+	uint8_t ES_currentTcpState( );
+	uint8_t ES_tcpActiveOpen( uint8_t *buf,uint16_t plen, uint8_t (*result_callback)(uint8_t fd,uint8_t statuscode,uint16_t data_start_pos_in_buf, uint16_t len_of_data),uint16_t (*datafill_callback)(uint8_t fd),uint16_t port );
+	void ES_tcpPassiveOpen( uint8_t *buf,uint16_t plen );
+	void ES_tcpClose( uint8_t *buf,uint16_t plen );
 
 };
 

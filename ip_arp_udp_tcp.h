@@ -134,10 +134,10 @@ extern uint16_t tcp_get_dlength ( uint8_t *buf );
 
 #ifdef FLASH_VARS
 // ----- http get
-extern void client_browse_url(prog_char *urlbuf, char *urlbuf_varpart, prog_char *hoststr, void (*callback)(uint8_t,uint16_t));
+extern void client_browse_url(prog_char *urlbuf, char *urlbuf_varpart, prog_char *hoststr, void (*callback)(uint8_t,uint16_t,uint16_t));
 #else
 // ----- http get
-extern void client_browse_url(char *urlbuf, char *urlbuf_varpart, char *hoststr, void (*callback)(uint8_t,uint16_t));
+extern void client_browse_url(char *urlbuf, char *urlbuf_varpart, char *hoststr, void (*callback)(uint8_t,uint16_t,uint16_t));
 #endif          // FLASH_VARS
 
 // The callback is a reference to a function which must look like this:
@@ -199,6 +199,16 @@ extern uint8_t packetloop_icmp_checkreply(uint8_t *buf,uint8_t *ip_monitoredhost
 #ifdef WOL_client
 extern void send_wol(uint8_t *buf,uint8_t *wolmac);
 #endif // WOL_client
+
+extern uint8_t nextTcpState( uint8_t *buf,uint16_t plen );
+extern uint8_t currentTcpState( );
+extern uint8_t tcpActiveOpen( uint8_t *buf,uint16_t plen,
+        uint8_t (*result_callback)(uint8_t fd,uint8_t statuscode,uint16_t data_start_pos_in_buf, uint16_t len_of_data),
+        uint16_t (*datafill_callback)(uint8_t fd),
+        uint16_t port);
+
+extern void tcpPassiveOpen( uint8_t *buf,uint16_t plen );
+extern void tcpClose( uint8_t *buf,uint16_t plen );
 
 #endif /* IP_ARP_UDP_TCP_H */
 //@}

@@ -44,13 +44,19 @@ The file should be extracted to the sketchbook/libraries/ folder so that there i
   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
  */
+#if (ARDUINO >= 100)
+#include <Arduino.h>
+#endif
 
 extern "C" {
 	#include "ip_config.h"
 	#include "enc28j60.h"
 	#include "ip_arp_udp_tcp.h"
 	#include "websrv_help_functions.h"
+	#if (ARDUINO >= 100)
+#else
 	#include "wiring.h"
+#endif
 #ifdef DNS_client
 	#include "dnslkup.h"
 #endif
@@ -291,12 +297,12 @@ uint16_t EtherShield::ES_tcp_get_dlength( uint8_t *buf ){
 
 #ifdef FLASH_VARS
 void EtherShield::ES_client_browse_url(prog_char *urlbuf, char *urlbuf_varpart, prog_char *hoststr,
-		void (*callback)(uint8_t,uint16_t)) {
+		void (*callback)(uint8_t,uint16_t,uint16_t)) {
 	client_browse_url(urlbuf, urlbuf_varpart, hoststr, callback);
 }
 #else
 void EtherShield::ES_client_browse_url(char *urlbuf, char *urlbuf_varpart, char *hoststr,
-		void (*callback)(uint8_t,uint16_t)) {
+		void (*callback)(uint8_t,uint16_t,uint16_t)) {
 	client_browse_url(urlbuf, urlbuf_varpart, hoststr, callback);
 }
 #endif		// FLASH_VARS
@@ -412,7 +418,7 @@ uint8_t EtherShield::resolveHostname(uint8_t *buf, uint16_t buffer_size, uint8_t
   long lastDnsRequest = millis();
   uint8_t dns_state = DNS_STATE_INIT;
   boolean gotAddress = false;
-  uint8_t dnsTries = 10;	// After 10 attempts fail gracefully so other action can be carried out
+  uint8_t dnsTries = 3;	// After 10 attempts fail gracefully so other action can be carried out
 
   while( !gotAddress ) {
     // handle ping and wait for a tcp packet
@@ -540,3 +546,28 @@ void EtherShield::ES_enc28j60PowerDown(){
 }
 
 
+// TCP functions broken out here for testing
+uint8_t EtherShield::ES_nextTcpState( uint8_t *buf, uint16_t plen ) {
+	return nextTcpState(buf, plen );
+}
+
+uint8_t EtherShield::ES_currentTcpState( ) {
+	return currentTcpState( );
+}
+
+uint8_t EtherShield::ES_tcpActiveOpen( uint8_t *buf,uint16_t plen,
+       uint8_t (*result_callback)(uint8_t fd,uint8_t statuscode,uint16_t data_start_pos_in_buf, uint16_t len_of_data),
+       uint16_t (*datafill_callback)(uint8_t fd),
+       uint16_t port ) {
+	return tcpActiveOpen(buf, plen, result_callback, datafill_callback, port );
+}
+
+void EtherShield::ES_tcpPassiveOpen( uint8_t *buf,uint16_t plen ) {
+	tcpPassiveOpen(buf, plen );
+}
+
+void EtherShield::ES_tcpClose( uint8_t *buf,uint16_t plen ) {
+	tcpClose(buf, plen );
+}
+
+// End

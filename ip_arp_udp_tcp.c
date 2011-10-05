@@ -25,6 +25,22 @@
 #include "net.h"
 #include "enc28j60.h"
 
+#undef ETHERSHIELD_DEBUG
+
+#ifdef ETHERSHIELD_DEBUG
+static void serial_write(unsigned char c) {
+    while (!(UCSR0A & (1 << UDRE0))) {}
+    UDR0 = c;
+}
+
+void ethershieldDebug(char *message) {
+    uint8_t i;
+    for (i = 0; message[i] != '\0'; i++) {
+        serial_write(message[i]);
+    }
+}
+#endif
+
 // Web server port, used when implementing webserver
 static uint8_t wwwport_l=80; // server port
 static uint8_t wwwport_h=0;  // Note: never use same as TCPCLIENT_SRC_PORT_H
@@ -1159,6 +1175,9 @@ void client_syn(uint8_t *buf,uint8_t srcport,uint8_t dstport_h,uint8_t dstport_l
         buf[TCP_CHECKSUM_L_P]=ck& 0xff;
         // 4 is the tcp mss option:
         enc28j60PacketSend(IP_HEADER_LEN+TCP_HEADER_LEN_PLAIN+ETH_HEADER_LEN+4,buf);
+#ifdef ETHERSHIELD_DEBUG
+        ethershieldDebug( "Sent TCP Syn\n");
+#endif
 }
 
 // Make a tcp data packet with next sequence number
@@ -1417,9 +1436,9 @@ uint8_t www_client_internal_result_callback(uint8_t fd, uint8_t statuscode, uint
 //
 //
 #ifdef FLASH_VARS
-void client_browse_url(prog_char *urlbuf, char *urlbuf_varpart, prog_char *hoststr, void (*callback)(uint8_t,uint16_t))
+void client_browse_url(prog_char *urlbuf, char *urlbuf_varpart, prog_char *hoststr, void (*callback)(uint8_t,uint16_t,uint16_t))
 #else
-void client_browse_url(char *urlbuf, char *urlbuf_varpart, char *hoststr, void (*callback)(uint8_t,uint16_t))
+void client_browse_url(char *urlbuf, char *urlbuf_varpart, char *hoststr, void (*callback)(uint8_t,uint16_t,uint16_t))
 #endif
 {
         client_urlbuf=urlbuf;
@@ -1484,6 +1503,7 @@ uint16_t packetloop_icmp_tcp(uint8_t *buf,uint16_t plen)
         uint16_t tcpstart;
         uint16_t save_len;
 #endif
+
         //plen will be unequal to zero if there is a valid 
         // packet (without crc error):
 #if defined (NTP_client) ||  defined (UDP_client) || defined (TCP_client) || defined (PING_client)
@@ -1493,7 +1513,6 @@ uint16_t packetloop_icmp_tcp(uint8_t *buf,uint16_t plen)
                 }
                 delaycnt++;
 #if defined (TCP_client)
-               // if (tcp_client_state==1 && (waitgwmac & WGW_HAVE_GW_MAC)){ // send a syn
                 if (tcp_client_state==1  && (waitgwmac & WGW_HAVE_GW_MAC)){ // send a syn
                         tcp_client_state= 2;
                         tcpclient_src_port_l++; // allocate a new port
@@ -1569,6 +1588,9 @@ uint16_t packetloop_icmp_tcp(uint8_t *buf,uint16_t plen)
                 // if we get a reset:
                 if (buf[TCP_FLAGS_P] & TCP_FLAGS_RST_V){
                         if (client_tcp_result_callback){
+#ifdef ETHERSHIELD_DEBUG
+                                ethershieldDebug( "RST: Calling tcp client callback\n");
+#endif
                                 // parameters in client_tcp_result_callback: fd, status, buf_start, len
                                 (*client_tcp_result_callback)((buf[TCP_DST_PORT_L_P]>>5)&0x7,3,0,0);
                         }
@@ -1582,6 +1604,9 @@ uint16_t packetloop_icmp_tcp(uint8_t *buf,uint16_t plen)
                 len=get_tcp_data_len(buf);
                 if (tcp_client_state== 2){
                         if ((buf[TCP_FLAGS_P] & TCP_FLAGS_SYN_V) && (buf[TCP_FLAGS_P] &TCP_FLAGS_ACK_V)){
+#ifdef ETHERSHIELD_DEBUG
+                                ethershieldDebug( "Got SYNACK\n");
+#endif
                                 // synack, answer with ack
                                 make_tcp_ack_from_any(buf,0,0);
                                 buf[TCP_FLAGS_P]=TCP_FLAGS_ACK_V|TCP_FLAGS_PUSH_V;
@@ -1590,6 +1615,9 @@ uint16_t packetloop_icmp_tcp(uint8_t *buf,uint16_t plen)
                                 // still have a valid tcp-ack in the buffer. In other words
                                 // you have just called make_tcp_ack_from_any(buf,0).
                                 if (client_tcp_datafill_callback){
+#ifdef ETHERSHIELD_DEBUG
+                                        ethershieldDebug( "Datafil Callback\n");
+#endif
                                         // in this case it is src port because the above 
                                         // make_tcp_ack_from_any swaps the dst and src port:
                                         len=(*client_tcp_datafill_callback)((buf[TCP_SRC_PORT_L_P]>>5)&0x7);
@@ -1599,6 +1627,9 @@ uint16_t packetloop_icmp_tcp(uint8_t *buf,uint16_t plen)
                                 }
                                 tcp_client_state=3;
                                 make_tcp_ack_with_data_noflags(buf,len);
+#ifdef ETHERSHIELD_DEBUG
+                                ethershieldDebug( "Send ACK\n");
+#endif
                                 return(0);
                         }else{
                                 // reset only if we have sent a syn and don't get syn-ack back.
@@ -1616,11 +1647,50 @@ uint16_t packetloop_icmp_tcp(uint8_t *buf,uint16_t plen)
                                 make_tcp_ack_from_any(buf,len,TCP_FLAGS_RST_V);
                                 return(0);
                         }
-                }
+                } 
                 // in tcp_client_state==3 we will normally first get an empty
                 // ack-packet and then a ack-packet with data.
-                if (tcp_client_state==3 && len>0){ 
+                if (tcp_client_state==4 ) {     //&& len>0){ 
                         // our first real data packet
+#ifdef ETHERSHIELD_DEBUG
+//                        ethershieldDebug( "First Data Packet\n");
+#endif
+                        // Removed this as there is no code to handle state 4. Only 1st packet will be available.
+                        //tcp_client_state=4;
+                        // return the data we received
+                        if (client_tcp_result_callback){
+                                tcpstart=TCP_DATA_START; // TCP_DATA_START is a formula
+                                // out of buffer bounds check, needed in case of fragmented IP packets
+                                if (tcpstart>plen-8){
+                                        tcpstart=plen-8; // dummy but save
+                                }
+                                save_len=len;
+                                if (tcpstart+len>plen){
+                                        save_len=plen-tcpstart;
+                                }
+#ifdef ETHERSHIELD_DEBUG
+                                ethershieldDebug( "Calling Result callback\n");
+#endif
+                                send_fin=(*client_tcp_result_callback)((buf[TCP_DST_PORT_L_P]>>5)&0x7,0,tcpstart,save_len);
+
+                        }
+                        if (send_fin){
+#ifdef ETHERSHIELD_DEBUG
+                                ethershieldDebug( "Send FIN\n");
+#endif
+                                make_tcp_ack_from_any(buf,len,TCP_FLAGS_PUSH_V|TCP_FLAGS_FIN_V);
+                                tcp_client_state=5;
+                                return(0);
+                        }
+                        make_tcp_ack_from_any(buf,len,0);
+                        return(0);
+                } 
+                if (tcp_client_state==3) {      // && len>0){ 
+                        // our first real data packet
+#ifdef ETHERSHIELD_DEBUG
+//                        ethershieldDebug( "First Data Packet\n");
+#endif
+                        // Removed this as there is no code to handle state 4. Only 1st packet will be available.
                         tcp_client_state=4;
                         // return the data we received
                         if (client_tcp_result_callback){
@@ -1633,19 +1703,34 @@ uint16_t packetloop_icmp_tcp(uint8_t *buf,uint16_t plen)
                                 if (tcpstart+len>plen){
                                         save_len=plen-tcpstart;
                                 }
+#ifdef ETHERSHIELD_DEBUG
+                                ethershieldDebug( "Calling Result callback\n");
+#endif
                                 send_fin=(*client_tcp_result_callback)((buf[TCP_DST_PORT_L_P]>>5)&0x7,0,tcpstart,save_len);
+
                         }
                         if (send_fin){
+#ifdef ETHERSHIELD_DEBUG
+                                ethershieldDebug( "Send FIN\n");
+#endif
                                 make_tcp_ack_from_any(buf,len,TCP_FLAGS_PUSH_V|TCP_FLAGS_FIN_V);
                                 tcp_client_state=5;
                                 return(0);
                         }
+                        make_tcp_ack_from_any(buf,len,0);
+                        return(0);
                 }
                 if(tcp_client_state==5){
                         // no more ack
+#ifdef ETHERSHIELD_DEBUG
+                        ethershieldDebug( "No more ACK\n");
+#endif
                         return(0);
                 }
                 if (buf[TCP_FLAGS_P] & TCP_FLAGS_FIN_V){
+#ifdef ETHERSHIELD_DEBUG
+                        ethershieldDebug( "Terminated\n");
+#endif
                         make_tcp_ack_from_any(buf,len+1,TCP_FLAGS_PUSH_V|TCP_FLAGS_FIN_V);
                         tcp_client_state=5; // connection terminated
                         return(0);
@@ -1655,6 +1740,9 @@ uint16_t packetloop_icmp_tcp(uint8_t *buf,uint16_t plen)
                 // and we ack only once we have the full packet
                 if (len>0){
                         make_tcp_ack_from_any(buf,len,0);
+#ifdef ETHERSHIELD_DEBUG
+                        ethershieldDebug( "Send ACK\n");
+#endif
                 }
                 return(0);
         }

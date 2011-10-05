@@ -37,7 +37,7 @@ uint8_t dnslkup_get_error_info(void)
         return(dns_ansError);
 }
 
-uint8_t *dnslkup_getip(void)
+uint8_t *dnslkup_getip()
 {       
         return(dns_answerip);
 }
