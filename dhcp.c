@@ -133,9 +133,8 @@ void dhcp_start(uint8_t *buf, uint8_t *macaddrin, uint8_t *ipaddrin,
           dnsserver[n] = 0;
         }
         // Set a unique hostname, use Arduino- plus last octet of mac address
-        // sprintf( hostname, "Arduino-%02x", macaddr[6] );
-        hostname[8] = 'A' + (macaddr[6] >> 4);
-        hostname[9] = 'A' + (macaddr[6] & 0x0F);
+        hostname[8] = 'A' + (macaddr[5] >> 4);
+        hostname[9] = 'A' + (macaddr[5] & 0x0F);
 
         // Reception of broadcast packets turned off by default, but
         // it has been shown that some routers send responses as
